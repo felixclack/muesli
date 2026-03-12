@@ -21,8 +21,9 @@ struct MuesliApp: App {
         }
         .defaultSize(width: 680, height: 420)
 
-        Settings {
+        Window("Settings", id: "settings") {
             SettingsView(model: model)
         }
+        .defaultSize(width: 560, height: 460)
     }
 }

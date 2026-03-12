@@ -3,6 +3,14 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var model: MuesliAppModel
 
+    private var recordingRequirements: [SetupRequirement] {
+        model.requirements.filter { $0.blocksManualRecording }
+    }
+
+    private var featureRequirements: [SetupRequirement] {
+        model.requirements.filter { !$0.blocksManualRecording }
+    }
+
     var body: some View {
         Form {
             Section("General") {
@@ -22,19 +30,25 @@ struct SettingsView: View {
                 ))
             }
 
-            Section("Setup") {
-                ForEach(model.requirements) { requirement in
-                    HStack(alignment: .top) {
-                        Image(systemName: requirement.satisfied ? "checkmark.circle.fill" : "exclamationmark.circle")
-                            .foregroundStyle(requirement.satisfied ? .green : .orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(requirement.title)
-                                .font(.headline)
-                            Text(requirement.instructions)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+            Section("Recording Readiness") {
+                Label(
+                    model.canRecordManually ? "Manual recording is ready." : "Recording is blocked until the items below are fixed.",
+                    systemImage: model.canRecordManually ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+                )
+                .foregroundStyle(model.canRecordManually ? .green : .orange)
+
+                ForEach(recordingRequirements) { requirement in
+                    RequirementRow(requirement: requirement)
+                }
+            }
+
+            Section("Automation & Transcripts") {
+                Text("These items improve automatic meeting detection and first-run transcription, but they do not block manual recording.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ForEach(featureRequirements) { requirement in
+                    RequirementRow(requirement: requirement)
                 }
 
                 Button("Grant Permissions & Download Model") {
@@ -51,5 +65,23 @@ struct SettingsView: View {
         }
         .padding()
         .frame(width: 560)
+    }
+}
+
+private struct RequirementRow: View {
+    let requirement: SetupRequirement
+
+    var body: some View {
+        HStack(alignment: .top) {
+            Image(systemName: requirement.satisfied ? "checkmark.circle.fill" : "exclamationmark.circle")
+                .foregroundStyle(requirement.satisfied ? .green : .orange)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(requirement.title)
+                    .font(.headline)
+                Text(requirement.instructions)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }

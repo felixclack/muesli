@@ -30,6 +30,18 @@ final class MuesliAppModel: ObservableObject {
     private var lastMissingRequirementSignature = ""
     private var lastArmedMeetingSignature = ""
 
+    var missingRecordingRequirements: [SetupRequirement] {
+        requirements.filter { !$0.satisfied && $0.blocksManualRecording }
+    }
+
+    var missingFeatureRequirements: [SetupRequirement] {
+        requirements.filter { !$0.satisfied && !$0.blocksManualRecording }
+    }
+
+    var canRecordManually: Bool {
+        missingRecordingRequirements.isEmpty
+    }
+
     init() {
         let repository = SessionRepository()
         let calendarSource = CalendarMeetingSource()
@@ -174,7 +186,7 @@ final class MuesliAppModel: ObservableObject {
     private func tick() async {
         await refreshRequirements()
 
-        let requirementsReady = requirements.allSatisfy(\.satisfied)
+        let recordingReady = canRecordManually
         let calendarReady = requirements.first(where: { $0.kind == .calendar })?.satisfied == true
         let currentSettings = settingsStore.settings
 
@@ -214,7 +226,7 @@ final class MuesliAppModel: ObservableObject {
 
         negativePollDuration = 0
 
-        guard requirementsReady else {
+        guard recordingReady else {
             status = .needsSetup
             return
         }
