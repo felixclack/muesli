@@ -8,6 +8,7 @@ final class MuesliAppModel: ObservableObject {
     @Published private(set) var status: AppStatus = .idle
     @Published private(set) var requirements: [SetupRequirement] = []
     @Published private(set) var armedMeetings: [ArmedMeeting] = []
+    @Published private(set) var upcomingTodayMeetings: [UpcomingMeetingSummary] = []
     @Published private(set) var sessions: [MeetingSession] = []
     @Published private(set) var activeSession: MeetingSession?
     @Published var lastError: String?
@@ -186,12 +187,14 @@ final class MuesliAppModel: ObservableObject {
     private func tick() async {
         await refreshRequirements()
 
+        let now = Date()
         let recordingReady = canRecordManually
         let calendarReady = requirements.first(where: { $0.kind == .calendar })?.satisfied == true
         let currentSettings = settingsStore.settings
 
-        let candidates = calendarReady ? await calendarSource.fetchCandidates(referenceDate: .now) : []
-        armedMeetings = MeetingArmer.armedMeetings(from: candidates, now: .now, settings: currentSettings)
+        let snapshot = calendarReady ? await calendarSource.fetchSnapshot(referenceDate: now) : .empty
+        upcomingTodayMeetings = snapshot.upcomingTodayMeetings
+        armedMeetings = MeetingArmer.armedMeetings(from: snapshot.candidates, now: now, settings: currentSettings)
         logArmedMeetingsIfNeeded()
 
         if let activeSession {
@@ -202,7 +205,7 @@ final class MuesliAppModel: ObservableObject {
 
             let context = ProviderPollContext(
                 settings: currentSettings,
-                now: .now,
+                now: now,
                 lastSystemAudioActivity: recorder.lastSystemAudioActivity
             )
 
@@ -234,7 +237,7 @@ final class MuesliAppModel: ObservableObject {
         var joinedMeetings: [ArmedMeeting] = []
         let context = ProviderPollContext(
             settings: currentSettings,
-            now: .now,
+            now: now,
             lastSystemAudioActivity: nil
         )
 

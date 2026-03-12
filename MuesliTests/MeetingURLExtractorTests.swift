@@ -33,4 +33,24 @@ final class MeetingURLExtractorTests: XCTestCase {
 
         XCTAssertNil(link)
     }
+
+    func testPlatformDisplayNameRecognizesZoomLinks() {
+        let platform = MeetingURLExtractor.platformDisplayName(
+            for: URL(string: "https://company.zoom.us/j/123456789")!,
+            location: nil,
+            notes: nil
+        )
+
+        XCTAssertEqual(platform, "Zoom")
+    }
+
+    func testPlatformDisplayNameFallsBackToReadableHostName() {
+        let platform = MeetingURLExtractor.platformDisplayName(
+            for: nil,
+            location: "https://meet.example-product.com/room/demo",
+            notes: nil
+        )
+
+        XCTAssertEqual(platform, "Example Product")
+    }
 }

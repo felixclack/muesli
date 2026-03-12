@@ -9,6 +9,7 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 14) {
             header
             meetingSummary
+            upcomingMeetingsSection
             setupSummary
 
             Divider()
@@ -103,7 +104,24 @@ struct MenuBarView: View {
                 subtitle: "Started \(DateFormatters.shortDateTime.string(from: activeSession.startedAt ?? .now))",
                 tint: .red
             )
-        } else if let nextMeeting = model.armedMeetings.first {
+        }
+    }
+
+    @ViewBuilder
+    private var upcomingMeetingsSection: some View {
+        if !model.upcomingTodayMeetings.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Today")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                VStack(spacing: 8) {
+                    ForEach(model.upcomingTodayMeetings) { meeting in
+                        UpcomingMeetingRow(meeting: meeting)
+                    }
+                }
+            }
+        } else if model.activeSession == nil, let nextMeeting = model.armedMeetings.first {
             SummaryCard(
                 title: nextMeeting.candidate.title,
                 subtitle: "Armed for \(DateFormatters.shortDateTime.string(from: nextMeeting.candidate.startDate))",
@@ -186,6 +204,37 @@ private struct SummaryCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(tint.opacity(0.18), lineWidth: 1)
+        )
+    }
+}
+
+private struct UpcomingMeetingRow: View {
+    let meeting: UpcomingMeetingSummary
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(DateFormatters.shortTime.string(from: meeting.startDate))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 56, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(meeting.title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+
+                Text(meeting.detailLine)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(12)
+        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
     }
 }
