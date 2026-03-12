@@ -5,8 +5,7 @@ import whisper
 
 actor WhisperTranscriber {
     enum TranscriberError: Error {
-        case missingMixedAudio
-        case missingModel
+        case missingAudio
         case initializationFailed
         case transcriptionFailed
     }
@@ -38,15 +37,73 @@ actor WhisperTranscriber {
     }
 
     func transcribe(session: inout MeetingSession) async throws {
-        guard let mixedAudioPath = session.artifacts.mixedAudioPath else {
-            throw TranscriberError.missingMixedAudio
-        }
-
         let sessionTitle = session.title
         Logger.transcription.info("Starting transcription for \(sessionTitle, privacy: .public)")
         let modelURL = try await ensureModel()
-        let samples = try audioSamples(from: URL(fileURLWithPath: mixedAudioPath))
-        Logger.transcription.info("Loaded \(samples.count, privacy: .public) audio samples for \(sessionTitle, privacy: .public)")
+        let microphoneURL = session.artifacts.microphoneAudioPath.map(URL.init(fileURLWithPath:))
+        let systemURL = session.artifacts.systemAudioPath.map(URL.init(fileURLWithPath:))
+        let mixedURL = session.artifacts.mixedAudioPath.map(URL.init(fileURLWithPath:))
+
+        let diarizedSegments: [TranscriptSegment]
+        let diarized: Bool
+
+        if let microphoneURL, let systemURL {
+            let microphoneSegments = try transcribeSegments(
+                from: microphoneURL,
+                speaker: .you,
+                modelURL: modelURL,
+                sessionTitle: sessionTitle
+            )
+            let systemSegments = try transcribeSegments(
+                from: systemURL,
+                speaker: .others,
+                modelURL: modelURL,
+                sessionTitle: sessionTitle
+            )
+            diarizedSegments = TranscriptComposer.diarizedSegments(
+                microphoneSegments: microphoneSegments,
+                systemSegments: systemSegments
+            )
+            diarized = true
+        } else if let mixedURL {
+            diarizedSegments = try transcribeSegments(
+                from: mixedURL,
+                speaker: nil,
+                modelURL: modelURL,
+                sessionTitle: sessionTitle
+            )
+            diarized = false
+        } else {
+            throw TranscriberError.missingAudio
+        }
+
+        let fullText = TranscriptComposer.renderPlainText(from: diarizedSegments)
+
+        let folderURL = URL(fileURLWithPath: session.storageFolderPath, isDirectory: true)
+        let transcriptURL = folderURL.appendingPathComponent("transcript.txt")
+        let segmentsURL = folderURL.appendingPathComponent("segments.json")
+
+        try fullText.write(to: transcriptURL, atomically: true, encoding: String.Encoding.utf8)
+        let segmentsData = try JSONEncoder.pretty.encode(diarizedSegments)
+        try segmentsData.write(to: segmentsURL, options: .atomic)
+
+        session.transcript = TranscriptArtifact(
+            transcriptPath: transcriptURL.path,
+            segmentsPath: segmentsURL.path,
+            language: "en",
+            segmentCount: diarizedSegments.count,
+            diarized: diarized
+        )
+        session.errorMessage = nil
+        session.state = .completed
+        Logger.transcription.info("Finished transcription for \(sessionTitle, privacy: .public) with \(diarizedSegments.count, privacy: .public) segments")
+    }
+
+    private func transcribeSegments(from url: URL, speaker: TranscriptSpeaker?, modelURL: URL, sessionTitle: String) throws -> [TranscriptSegment] {
+        let samples = try audioSamples(from: url)
+        Logger.transcription.info(
+            "Loaded \(samples.count, privacy: .public) audio samples from \(url.lastPathComponent, privacy: .public) for \(sessionTitle, privacy: .public)"
+        )
 
         var contextParams = whisper_context_default_params()
         contextParams.use_gpu = true
@@ -76,42 +133,23 @@ actor WhisperTranscriber {
         }
 
         guard result == 0 else {
-            Logger.transcription.error("Whisper returned non-zero status \(result, privacy: .public) for \(sessionTitle, privacy: .public)")
+            Logger.transcription.error(
+                "Whisper returned non-zero status \(result, privacy: .public) for \(url.lastPathComponent, privacy: .public) in \(sessionTitle, privacy: .public)"
+            )
             throw TranscriberError.transcriptionFailed
         }
 
         let segmentCount = Int(whisper_full_n_segments(context))
-        var fullText = ""
         var segments: [TranscriptSegment] = []
 
         for index in 0..<segmentCount {
             let text = String(cString: whisper_full_get_segment_text(context, Int32(index))).trimmingCharacters(in: .whitespacesAndNewlines)
             let start = whisper_full_get_segment_t0(context, Int32(index)) * 10
             let end = whisper_full_get_segment_t1(context, Int32(index)) * 10
-            if !text.isEmpty {
-                fullText.append(text)
-                fullText.append("\n")
-            }
-            segments.append(TranscriptSegment(startMS: start, endMS: end, text: text))
+            segments.append(TranscriptSegment(startMS: start, endMS: end, text: text, speaker: speaker))
         }
 
-        let folderURL = URL(fileURLWithPath: session.storageFolderPath, isDirectory: true)
-        let transcriptURL = folderURL.appendingPathComponent("transcript.txt")
-        let segmentsURL = folderURL.appendingPathComponent("segments.json")
-
-        try fullText.write(to: transcriptURL, atomically: true, encoding: .utf8)
-        let segmentsData = try JSONEncoder.pretty.encode(segments)
-        try segmentsData.write(to: segmentsURL, options: .atomic)
-
-        session.transcript = TranscriptArtifact(
-            transcriptPath: transcriptURL.path,
-            segmentsPath: segmentsURL.path,
-            language: "en",
-            segmentCount: segments.count
-        )
-        session.errorMessage = nil
-        session.state = .completed
-        Logger.transcription.info("Finished transcription for \(sessionTitle, privacy: .public) with \(segments.count, privacy: .public) segments")
+        return segments
     }
 
     private func audioSamples(from url: URL) throws -> [Float] {
