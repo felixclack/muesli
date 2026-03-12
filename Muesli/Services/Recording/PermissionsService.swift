@@ -18,6 +18,15 @@ struct SetupRequirement: Identifiable, Sendable {
     let instructions: String
 
     var id: String { kind.rawValue }
+
+    var blocksManualRecording: Bool {
+        switch kind {
+        case .screenRecording, .microphone:
+            true
+        case .calendar, .diaAutomation, .model:
+            false
+        }
+    }
 }
 
 actor PermissionsService {

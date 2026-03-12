@@ -12,7 +12,7 @@ enum AppStatus: String, Sendable {
     var title: String {
         switch self {
         case .idle:
-            "Idle"
+            "Ready"
         case .armed:
             "Armed"
         case .recording:
