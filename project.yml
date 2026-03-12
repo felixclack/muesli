@@ -1,0 +1,59 @@
+name: Muesli
+options:
+  minimumXcodeGenVersion: 2.38.0
+  developmentLanguage: en
+  deploymentTarget:
+    macOS: "15.0"
+settings:
+  base:
+    PRODUCT_NAME: Muesli
+    PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.Muesli
+    SWIFT_VERSION: 6.0
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: NO
+    ENABLE_APP_SANDBOX: NO
+packages:
+  whisper:
+    url: https://github.com/ggerganov/whisper.spm
+    branch: master
+targets:
+  Muesli:
+    type: application
+    platform: macOS
+    sources:
+      - path: Muesli
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        INFOPLIST_FILE: Muesli/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.Muesli
+        ENABLE_HARDENED_RUNTIME: NO
+        OTHER_LDFLAGS:
+          - $(inherited)
+    dependencies:
+      - package: whisper
+        product: whisper
+  MuesliTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: MuesliTests
+    dependencies:
+      - target: Muesli
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.MuesliTests
+        PRODUCT_NAME: MuesliTests
+        PRODUCT_MODULE_NAME: MuesliTests
+schemes:
+  Muesli:
+    build:
+      targets:
+        Muesli: all
+        MuesliTests: [test]
+    test:
+      targets:
+        - name: MuesliTests

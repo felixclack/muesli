@@ -1,0 +1,685 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0F041ECAC7DBC1C2435EB354 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7DB226F2DABECCBF5FD53 /* NotificationService.swift */; };
+		109F9F24D61CFAC1086234A2 /* AudioSampleWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814F30F00CBB33E67724E75A /* AudioSampleWriter.swift */; };
+		259A66E6073191C5CE1B19E1 /* HistoryWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47D8A41DEE1D4A5BBF1AFB83 /* HistoryWindowView.swift */; };
+		34532FA5FA3CE5A672F3773C /* MeetingURLExtractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B721F9595B4C2E789310054 /* MeetingURLExtractorTests.swift */; };
+		39173D4BD4D4D31DE5772CF9 /* ProviderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324367AFA7EE687AD55A5327 /* ProviderState.swift */; };
+		3F9827FDB0BF2CBD78750D6B /* MeetingURLExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D90C8B8C41835D494C03C95 /* MeetingURLExtractor.swift */; };
+		4170D5D0BEC4B6C53925DECD /* MuesliApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B797A9145D3F07492F8448 /* MuesliApp.swift */; };
+		4261F6D18F1D7E97DF3787E6 /* TranscriptArtifact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C9A09E3F43A2E73C987D33 /* TranscriptArtifact.swift */; };
+		4E7A2253AC4418870E35F051 /* SessionRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8946E3819D28C0C53289B8A7 /* SessionRepositoryTests.swift */; };
+		57665B5CA46272C1D4FDCA45 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612C6CA12CF8EAD1C0C97623 /* AppSettings.swift */; };
+		5D7B4568C8CD7CE20095F06C /* MeetingProviderAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DAD823069D7D33EBCB127E /* MeetingProviderAdapter.swift */; };
+		653A7BC31753DD6B2DF39393 /* DiaMeetAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C25BA9CE4BB726C2AF2DF8 /* DiaMeetAdapter.swift */; };
+		67BE785B2236E53D632E60B9 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C38B3CD1469D9AE23C6DAA /* DateFormatters.swift */; };
+		6944386588CCD6CF932AEC8F /* whisper in Frameworks */ = {isa = PBXBuildFile; productRef = 421787EFE89A7EA33140D8D9 /* whisper */; };
+		6DC4F52601D53C59A2C52534 /* ArmedMeeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F04D11B93EE1F4C57CB34B6 /* ArmedMeeting.swift */; };
+		6E02C5D46542239ADC79E32F /* CalendarMeetingSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DD1301061486D2EC8DE677 /* CalendarMeetingSource.swift */; };
+		6E317BBD37CDC082DA2769C7 /* PermissionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE08ECE61AD8D637AC71C1F /* PermissionsService.swift */; };
+		70ACCBF83240287E84BCF418 /* AppStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B70213C8DACE84ADCF63D0A /* AppStatus.swift */; };
+		77F3B9A2C2A34CD78F2E2CF9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6BA38436A99ACADAE6186FD /* SettingsView.swift */; };
+		7A4BBF8B877FFB892081C7A1 /* MeetingProviderKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = B93E2EF81B17E2C35A1B23AE /* MeetingProviderKind.swift */; };
+		8043C77C15040692AC2F1828 /* Coders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE95B6256BF93706CDEAC8E /* Coders.swift */; };
+		88E3FFE4614CEB83BD20DD91 /* WhisperTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C05813CCDF56349F2752F2 /* WhisperTranscriber.swift */; };
+		8E8CBC85E1DD2548E24CDCF1 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA57FB3F01FC20326703AB5 /* SettingsStore.swift */; };
+		91E7E94453DEE9C9F1EA7B1C /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA298BDB38E1761420F53112 /* SessionRepository.swift */; };
+		A321442CF97D1A139362AB7F /* MuesliAppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D84F7CF03ACBA316E132981 /* MuesliAppModel.swift */; };
+		B0CE0D2565A6CFFE605B4B0C /* GatherAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6747AE44BB480298EF95D0A /* GatherAdapter.swift */; };
+		B508FCE57D750D02870EA694 /* MeetingRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D23E9EA8996F87ABD8482E /* MeetingRecorder.swift */; };
+		B9909369E321901184556F3D /* RecordingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF3FE0ABE7AA2AB613C5967 /* RecordingState.swift */; };
+		BAF2163B5FD790E42BDEED63 /* MeetingArmerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CC7307F11EB09160BAF0E6 /* MeetingArmerTests.swift */; };
+		BF6BD837C21189754734E2F7 /* MeetingArmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2CE985DC239B7503F61548B /* MeetingArmer.swift */; };
+		C813897291A8B588F0F05212 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D860DCCB0A0FA998FC560D /* MenuBarView.swift */; };
+		D3A90911A42C2AB4AA5DEB7D /* Logger+Muesli.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F430AF8C172A1EFD2B71449 /* Logger+Muesli.swift */; };
+		D9A0E1F658BC09C08C12D193 /* String+Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2AFE4B7C83ADB5FAC906C9 /* String+Slug.swift */; };
+		DA2547C2421CD4F7DA66F104 /* MeetingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FBE0BDBF3DB0A4C64D5C05 /* MeetingSession.swift */; };
+		F4F02CF86ABBE31878ECF32F /* DiaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6319871850D187613DB5CF1 /* DiaController.swift */; };
+		F9CE7B5002C98354FBC3A1A6 /* AudioMixer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13A2866EC832EFAA5C4E39F /* AudioMixer.swift */; };
+		FA95AD9CF1F35A2CBEB24CD4 /* MeetingCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2DF025DBEDB1EE14CE4349 /* MeetingCandidate.swift */; };
+		FED1BE08F72E58B24F172C02 /* MeetingLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A56C324855B21182AC7C4CE /* MeetingLink.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		087BC8E8CF596FE05F06C0C6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFF81D5F522E1C7AC419486E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 967DE782464681829466EE03;
+			remoteInfo = Muesli;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0EA57FB3F01FC20326703AB5 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		0FE08ECE61AD8D637AC71C1F /* PermissionsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsService.swift; sourceTree = "<group>"; };
+		11CC7307F11EB09160BAF0E6 /* MeetingArmerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingArmerTests.swift; sourceTree = "<group>"; };
+		17D860DCCB0A0FA998FC560D /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		1F430AF8C172A1EFD2B71449 /* Logger+Muesli.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Logger+Muesli.swift"; sourceTree = "<group>"; };
+		2D90C8B8C41835D494C03C95 /* MeetingURLExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingURLExtractor.swift; sourceTree = "<group>"; };
+		324367AFA7EE687AD55A5327 /* ProviderState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderState.swift; sourceTree = "<group>"; };
+		38FBDEB250F50B4F07D38315 /* Muesli.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Muesli.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		47D8A41DEE1D4A5BBF1AFB83 /* HistoryWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryWindowView.swift; sourceTree = "<group>"; };
+		50C8AF2B1F4FDCF5FD3DE1F7 /* MuesliTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MuesliTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		55FBE0BDBF3DB0A4C64D5C05 /* MeetingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSession.swift; sourceTree = "<group>"; };
+		5A56C324855B21182AC7C4CE /* MeetingLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLink.swift; sourceTree = "<group>"; };
+		5F04D11B93EE1F4C57CB34B6 /* ArmedMeeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArmedMeeting.swift; sourceTree = "<group>"; };
+		612C6CA12CF8EAD1C0C97623 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		6AE95B6256BF93706CDEAC8E /* Coders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coders.swift; sourceTree = "<group>"; };
+		79C7DB226F2DABECCBF5FD53 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		7D84F7CF03ACBA316E132981 /* MuesliAppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MuesliAppModel.swift; sourceTree = "<group>"; };
+		814F30F00CBB33E67724E75A /* AudioSampleWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSampleWriter.swift; sourceTree = "<group>"; };
+		8946E3819D28C0C53289B8A7 /* SessionRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRepositoryTests.swift; sourceTree = "<group>"; };
+		8B721F9595B4C2E789310054 /* MeetingURLExtractorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingURLExtractorTests.swift; sourceTree = "<group>"; };
+		92C9A09E3F43A2E73C987D33 /* TranscriptArtifact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptArtifact.swift; sourceTree = "<group>"; };
+		9A2DF025DBEDB1EE14CE4349 /* MeetingCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingCandidate.swift; sourceTree = "<group>"; };
+		9B70213C8DACE84ADCF63D0A /* AppStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStatus.swift; sourceTree = "<group>"; };
+		A3D23E9EA8996F87ABD8482E /* MeetingRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingRecorder.swift; sourceTree = "<group>"; };
+		A6747AE44BB480298EF95D0A /* GatherAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatherAdapter.swift; sourceTree = "<group>"; };
+		A7DD1301061486D2EC8DE677 /* CalendarMeetingSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMeetingSource.swift; sourceTree = "<group>"; };
+		B6319871850D187613DB5CF1 /* DiaController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaController.swift; sourceTree = "<group>"; };
+		B7C25BA9CE4BB726C2AF2DF8 /* DiaMeetAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaMeetAdapter.swift; sourceTree = "<group>"; };
+		B93E2EF81B17E2C35A1B23AE /* MeetingProviderKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingProviderKind.swift; sourceTree = "<group>"; };
+		B9B797A9145D3F07492F8448 /* MuesliApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MuesliApp.swift; sourceTree = "<group>"; };
+		B9C05813CCDF56349F2752F2 /* WhisperTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperTranscriber.swift; sourceTree = "<group>"; };
+		BEF3FE0ABE7AA2AB613C5967 /* RecordingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingState.swift; sourceTree = "<group>"; };
+		C13A2866EC832EFAA5C4E39F /* AudioMixer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMixer.swift; sourceTree = "<group>"; };
+		C3C38B3CD1469D9AE23C6DAA /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
+		DA298BDB38E1761420F53112 /* SessionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRepository.swift; sourceTree = "<group>"; };
+		E6BA38436A99ACADAE6186FD /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E9DAD823069D7D33EBCB127E /* MeetingProviderAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingProviderAdapter.swift; sourceTree = "<group>"; };
+		EF2AFE4B7C83ADB5FAC906C9 /* String+Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Slug.swift"; sourceTree = "<group>"; };
+		F2CE985DC239B7503F61548B /* MeetingArmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingArmer.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		935F41B59445B282F062E3E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6944386588CCD6CF932AEC8F /* whisper in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0CDE233F14FE9EE8EB1BDB1C = {
+			isa = PBXGroup;
+			children = (
+				AF1E186E55043078BCEB5A41 /* Muesli */,
+				C1BAE84F74EA00FD62D84630 /* MuesliTests */,
+				F34B64A3FA7EA8904FE5848A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		19286B43C30498499E1A7779 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				83DB9FDDB06CA2B2735334DF /* History */,
+				88933941F2A278DFB1D104D3 /* Setup */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		50BCD65000DD5A0989C983E8 /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				B6319871850D187613DB5CF1 /* DiaController.swift */,
+				B7C25BA9CE4BB726C2AF2DF8 /* DiaMeetAdapter.swift */,
+				A6747AE44BB480298EF95D0A /* GatherAdapter.swift */,
+				E9DAD823069D7D33EBCB127E /* MeetingProviderAdapter.swift */,
+			);
+			path = Providers;
+			sourceTree = "<group>";
+		};
+		60249B22EEBE2A83DA3B40E0 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				612C6CA12CF8EAD1C0C97623 /* AppSettings.swift */,
+				5F04D11B93EE1F4C57CB34B6 /* ArmedMeeting.swift */,
+				9A2DF025DBEDB1EE14CE4349 /* MeetingCandidate.swift */,
+				5A56C324855B21182AC7C4CE /* MeetingLink.swift */,
+				B93E2EF81B17E2C35A1B23AE /* MeetingProviderKind.swift */,
+				55FBE0BDBF3DB0A4C64D5C05 /* MeetingSession.swift */,
+				324367AFA7EE687AD55A5327 /* ProviderState.swift */,
+				BEF3FE0ABE7AA2AB613C5967 /* RecordingState.swift */,
+				92C9A09E3F43A2E73C987D33 /* TranscriptArtifact.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		67DAFE57903F9E8D3B720332 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				6AE95B6256BF93706CDEAC8E /* Coders.swift */,
+				C3C38B3CD1469D9AE23C6DAA /* DateFormatters.swift */,
+				1F430AF8C172A1EFD2B71449 /* Logger+Muesli.swift */,
+				EF2AFE4B7C83ADB5FAC906C9 /* String+Slug.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		74F2B0603F4094A1BD65ADFB /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				79C7DB226F2DABECCBF5FD53 /* NotificationService.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		7DE92F8CD462770280B48ED7 /* Transcription */ = {
+			isa = PBXGroup;
+			children = (
+				B9C05813CCDF56349F2752F2 /* WhisperTranscriber.swift */,
+			);
+			path = Transcription;
+			sourceTree = "<group>";
+		};
+		83DB9FDDB06CA2B2735334DF /* History */ = {
+			isa = PBXGroup;
+			children = (
+				47D8A41DEE1D4A5BBF1AFB83 /* HistoryWindowView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		84931E4ED48ADF9B0A7CFF0E /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				DA298BDB38E1761420F53112 /* SessionRepository.swift */,
+				0EA57FB3F01FC20326703AB5 /* SettingsStore.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		88933941F2A278DFB1D104D3 /* Setup */ = {
+			isa = PBXGroup;
+			children = (
+				E6BA38436A99ACADAE6186FD /* SettingsView.swift */,
+			);
+			path = Setup;
+			sourceTree = "<group>";
+		};
+		A3622C3F0AD0B13C57EE8B0C /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9B70213C8DACE84ADCF63D0A /* AppStatus.swift */,
+				17D860DCCB0A0FA998FC560D /* MenuBarView.swift */,
+				B9B797A9145D3F07492F8448 /* MuesliApp.swift */,
+				7D84F7CF03ACBA316E132981 /* MuesliAppModel.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A8A7375EAE653E9E263599BE /* Recording */ = {
+			isa = PBXGroup;
+			children = (
+				C13A2866EC832EFAA5C4E39F /* AudioMixer.swift */,
+				814F30F00CBB33E67724E75A /* AudioSampleWriter.swift */,
+				A3D23E9EA8996F87ABD8482E /* MeetingRecorder.swift */,
+				0FE08ECE61AD8D637AC71C1F /* PermissionsService.swift */,
+			);
+			path = Recording;
+			sourceTree = "<group>";
+		};
+		AF1E186E55043078BCEB5A41 /* Muesli */ = {
+			isa = PBXGroup;
+			children = (
+				A3622C3F0AD0B13C57EE8B0C /* App */,
+				19286B43C30498499E1A7779 /* Features */,
+				60249B22EEBE2A83DA3B40E0 /* Models */,
+				C4EC38E10D35292AED002D69 /* Services */,
+				67DAFE57903F9E8D3B720332 /* Utilities */,
+			);
+			path = Muesli;
+			sourceTree = "<group>";
+		};
+		C1BAE84F74EA00FD62D84630 /* MuesliTests */ = {
+			isa = PBXGroup;
+			children = (
+				11CC7307F11EB09160BAF0E6 /* MeetingArmerTests.swift */,
+				8B721F9595B4C2E789310054 /* MeetingURLExtractorTests.swift */,
+				8946E3819D28C0C53289B8A7 /* SessionRepositoryTests.swift */,
+			);
+			path = MuesliTests;
+			sourceTree = "<group>";
+		};
+		C1D2D68E2F054A487F0DF111 /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+				A7DD1301061486D2EC8DE677 /* CalendarMeetingSource.swift */,
+				F2CE985DC239B7503F61548B /* MeetingArmer.swift */,
+				2D90C8B8C41835D494C03C95 /* MeetingURLExtractor.swift */,
+			);
+			path = Calendar;
+			sourceTree = "<group>";
+		};
+		C4EC38E10D35292AED002D69 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C1D2D68E2F054A487F0DF111 /* Calendar */,
+				74F2B0603F4094A1BD65ADFB /* Notifications */,
+				50BCD65000DD5A0989C983E8 /* Providers */,
+				A8A7375EAE653E9E263599BE /* Recording */,
+				84931E4ED48ADF9B0A7CFF0E /* Storage */,
+				7DE92F8CD462770280B48ED7 /* Transcription */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F34B64A3FA7EA8904FE5848A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				38FBDEB250F50B4F07D38315 /* Muesli.app */,
+				50C8AF2B1F4FDCF5FD3DE1F7 /* MuesliTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		58671CD703C4AF6A7A0539CB /* MuesliTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F5FBB2205A4A77977215786 /* Build configuration list for PBXNativeTarget "MuesliTests" */;
+			buildPhases = (
+				7F8F2A7DE66D9189F0BBD6F6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B5E1D1941C26B09B5E2BA0B8 /* PBXTargetDependency */,
+			);
+			name = MuesliTests;
+			packageProductDependencies = (
+			);
+			productName = MuesliTests;
+			productReference = 50C8AF2B1F4FDCF5FD3DE1F7 /* MuesliTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		967DE782464681829466EE03 /* Muesli */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE1B046BDC0E773B6F2E0566 /* Build configuration list for PBXNativeTarget "Muesli" */;
+			buildPhases = (
+				79E9E46D4EA912D9D05179D9 /* Sources */,
+				935F41B59445B282F062E3E7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Muesli;
+			packageProductDependencies = (
+				421787EFE89A7EA33140D8D9 /* whisper */,
+			);
+			productName = Muesli;
+			productReference = 38FBDEB250F50B4F07D38315 /* Muesli.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DFF81D5F522E1C7AC419486E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					58671CD703C4AF6A7A0539CB = {
+						ProvisioningStyle = Automatic;
+					};
+					967DE782464681829466EE03 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7C74FD29AE3BE0F605B90B7A /* Build configuration list for PBXProject "Muesli" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0CDE233F14FE9EE8EB1BDB1C;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1502D5A1E37BEEE3D51C9C97 /* XCRemoteSwiftPackageReference "whisper.spm" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				967DE782464681829466EE03 /* Muesli */,
+				58671CD703C4AF6A7A0539CB /* MuesliTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		79E9E46D4EA912D9D05179D9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				57665B5CA46272C1D4FDCA45 /* AppSettings.swift in Sources */,
+				70ACCBF83240287E84BCF418 /* AppStatus.swift in Sources */,
+				6DC4F52601D53C59A2C52534 /* ArmedMeeting.swift in Sources */,
+				F9CE7B5002C98354FBC3A1A6 /* AudioMixer.swift in Sources */,
+				109F9F24D61CFAC1086234A2 /* AudioSampleWriter.swift in Sources */,
+				6E02C5D46542239ADC79E32F /* CalendarMeetingSource.swift in Sources */,
+				8043C77C15040692AC2F1828 /* Coders.swift in Sources */,
+				67BE785B2236E53D632E60B9 /* DateFormatters.swift in Sources */,
+				F4F02CF86ABBE31878ECF32F /* DiaController.swift in Sources */,
+				653A7BC31753DD6B2DF39393 /* DiaMeetAdapter.swift in Sources */,
+				B0CE0D2565A6CFFE605B4B0C /* GatherAdapter.swift in Sources */,
+				259A66E6073191C5CE1B19E1 /* HistoryWindowView.swift in Sources */,
+				D3A90911A42C2AB4AA5DEB7D /* Logger+Muesli.swift in Sources */,
+				BF6BD837C21189754734E2F7 /* MeetingArmer.swift in Sources */,
+				FA95AD9CF1F35A2CBEB24CD4 /* MeetingCandidate.swift in Sources */,
+				FED1BE08F72E58B24F172C02 /* MeetingLink.swift in Sources */,
+				5D7B4568C8CD7CE20095F06C /* MeetingProviderAdapter.swift in Sources */,
+				7A4BBF8B877FFB892081C7A1 /* MeetingProviderKind.swift in Sources */,
+				B508FCE57D750D02870EA694 /* MeetingRecorder.swift in Sources */,
+				DA2547C2421CD4F7DA66F104 /* MeetingSession.swift in Sources */,
+				3F9827FDB0BF2CBD78750D6B /* MeetingURLExtractor.swift in Sources */,
+				C813897291A8B588F0F05212 /* MenuBarView.swift in Sources */,
+				4170D5D0BEC4B6C53925DECD /* MuesliApp.swift in Sources */,
+				A321442CF97D1A139362AB7F /* MuesliAppModel.swift in Sources */,
+				0F041ECAC7DBC1C2435EB354 /* NotificationService.swift in Sources */,
+				6E317BBD37CDC082DA2769C7 /* PermissionsService.swift in Sources */,
+				39173D4BD4D4D31DE5772CF9 /* ProviderState.swift in Sources */,
+				B9909369E321901184556F3D /* RecordingState.swift in Sources */,
+				91E7E94453DEE9C9F1EA7B1C /* SessionRepository.swift in Sources */,
+				8E8CBC85E1DD2548E24CDCF1 /* SettingsStore.swift in Sources */,
+				77F3B9A2C2A34CD78F2E2CF9 /* SettingsView.swift in Sources */,
+				D9A0E1F658BC09C08C12D193 /* String+Slug.swift in Sources */,
+				4261F6D18F1D7E97DF3787E6 /* TranscriptArtifact.swift in Sources */,
+				88E3FFE4614CEB83BD20DD91 /* WhisperTranscriber.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7F8F2A7DE66D9189F0BBD6F6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BAF2163B5FD790E42BDEED63 /* MeetingArmerTests.swift in Sources */,
+				34532FA5FA3CE5A672F3773C /* MeetingURLExtractorTests.swift in Sources */,
+				4E7A2253AC4418870E35F051 /* SessionRepositoryTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B5E1D1941C26B09B5E2BA0B8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 967DE782464681829466EE03 /* Muesli */;
+			targetProxy = 087BC8E8CF596FE05F06C0C6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1D581F995258CB47B1450E08 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				PRODUCT_NAME = Muesli;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		20EB2AB0B126C2AE7BB93543 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.MuesliTests;
+				PRODUCT_MODULE_NAME = MuesliTests;
+				PRODUCT_NAME = MuesliTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Muesli.app/Contents/MacOS/Muesli";
+			};
+			name = Debug;
+		};
+		46CE00C49E8CBBC6EADFFA5B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = Muesli/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DFD54A67A20574734ADD3671 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				PRODUCT_NAME = Muesli;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		E5CA2F8DA66D4CC554E03748 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.MuesliTests;
+				PRODUCT_MODULE_NAME = MuesliTests;
+				PRODUCT_NAME = MuesliTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Muesli.app/Contents/MacOS/Muesli";
+			};
+			name = Release;
+		};
+		E761AEACC2373DC1E5F8278B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = Muesli/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3F5FBB2205A4A77977215786 /* Build configuration list for PBXNativeTarget "MuesliTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				20EB2AB0B126C2AE7BB93543 /* Debug */,
+				E5CA2F8DA66D4CC554E03748 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7C74FD29AE3BE0F605B90B7A /* Build configuration list for PBXProject "Muesli" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D581F995258CB47B1450E08 /* Debug */,
+				DFD54A67A20574734ADD3671 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AE1B046BDC0E773B6F2E0566 /* Build configuration list for PBXNativeTarget "Muesli" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E761AEACC2373DC1E5F8278B /* Debug */,
+				46CE00C49E8CBBC6EADFFA5B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1502D5A1E37BEEE3D51C9C97 /* XCRemoteSwiftPackageReference "whisper.spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ggerganov/whisper.spm";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		421787EFE89A7EA33140D8D9 /* whisper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1502D5A1E37BEEE3D51C9C97 /* XCRemoteSwiftPackageReference "whisper.spm" */;
+			productName = whisper;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DFF81D5F522E1C7AC419486E /* Project object */;
+}
