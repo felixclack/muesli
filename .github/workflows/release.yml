@@ -3,10 +3,6 @@ name: Release macOS
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: Git ref to release
-        required: false
-        default: main
       tag_name:
         description: Optional tag name. Defaults to v<CFBundleShortVersionString>.
         required: false
@@ -37,7 +33,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
