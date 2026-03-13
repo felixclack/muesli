@@ -4,3 +4,6 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .DS_Store
+.env.fastlane
+fastlane/credentials/
+fastlane/report.xml

@@ -73,6 +73,9 @@ struct MenuBarView: View {
         }
         .padding(14)
         .frame(width: 340)
+        .onAppear {
+            model.refreshNow()
+        }
     }
 
     private var header: some View {

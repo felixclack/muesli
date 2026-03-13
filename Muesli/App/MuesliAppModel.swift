@@ -26,6 +26,7 @@ final class MuesliAppModel: ObservableObject {
     private let notifications = NotificationService()
 
     private var automationTask: Task<Void, Never>?
+    private var activationTask: Task<Void, Never>?
     private var negativePollDuration: TimeInterval = 0
     private var attemptedInitialPermissionBootstrap = false
     private var lastMissingRequirementSignature = ""
@@ -62,6 +63,12 @@ final class MuesliAppModel: ObservableObject {
             diaProbe: { await diaController.automationPermissionGranted() },
             modelProbe: { await transcriber.modelExists() }
         )
+        self.activationTask = Task { [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: NSApplication.didBecomeActiveNotification) {
+                guard let self else { return }
+                await self.tick()
+            }
+        }
 
         Task {
             await loadSessions()
@@ -72,6 +79,7 @@ final class MuesliAppModel: ObservableObject {
 
     deinit {
         automationTask?.cancel()
+        activationTask?.cancel()
     }
 
     func start() {

@@ -7,7 +7,7 @@ options:
 settings:
   base:
     PRODUCT_NAME: Muesli
-    PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.Muesli
+    PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.muesli
     SWIFT_VERSION: 6.0
     MACOSX_DEPLOYMENT_TARGET: "15.0"
     CODE_SIGN_STYLE: Automatic
@@ -28,7 +28,7 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Muesli/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.Muesli
+        PRODUCT_BUNDLE_IDENTIFIER: com.felixclack.muesli
         ENABLE_HARDENED_RUNTIME: NO
         OTHER_LDFLAGS:
           - $(inherited)

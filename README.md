@@ -51,6 +51,14 @@ This project is not notarized yet, so macOS may block the first launch on anothe
 3. Choose `Open`.
 4. Confirm the prompt.
 
+For local reinstalls, macOS permissions are most likely to persist when:
+
+- the app stays at `/Applications/Muesli.app`
+- the bundle identifier stays `com.felixclack.muesli`
+- each reinstall is signed with the same non-ad-hoc certificate
+
+Ad hoc local builds often look like a different app to macOS privacy controls, so Screen Recording, Microphone, Calendar, and Automation prompts may reappear after reinstalling.
+
 ## First-Run Setup
 
 On first launch, Muesli needs a few macOS permissions:
@@ -130,6 +138,94 @@ If you change `project.yml`, regenerate the project with XcodeGen:
 
 ```bash
 xcodegen generate
+```
+
+### Fastlane Release Setup
+
+This repo now uses Fastlane for local reinstalls, Developer ID certificate setup, and signed/notarized releases.
+
+Check the current machine state first:
+
+```bash
+fastlane mac doctor
+```
+
+Fastlane will use these defaults unless you override them:
+
+- bundle identifier: `com.felixclack.muesli`
+- team ID: `4754Y2K7H2`
+
+For App Store Connect authentication, set one of:
+
+- `APP_STORE_CONNECT_API_KEY_PATH` to a Fastlane-compatible API key JSON file
+- `FASTLANE_USER` to your Apple ID email
+
+If you use `FASTLANE_USER` for notarization, also set:
+
+- `FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD`
+
+To keep API keys out of git, a convenient place is `fastlane/credentials/`, which is ignored by `.gitignore`.
+
+For a local-only setup on this Mac, you can also keep Fastlane secrets in `.env.fastlane`. The wrapper scripts load that file automatically if it exists.
+
+### Create Or Sync The Developer ID Certificate
+
+If you want Fastlane to manage the `Developer ID Application` certificate for you, create a private GitHub repo at `felixclack/muesli-certificates`. Fastlane now assumes that repository by default:
+
+```bash
+FASTLANE_TEAM_ID="4754Y2K7H2" \
+APP_STORE_CONNECT_API_KEY_PATH="fastlane/credentials/AuthKey_ABC123XYZ.json" \
+scripts/setup_signing.sh
+```
+
+That lane first tries to sync an existing `Developer ID Application` certificate from `git@github.com:felixclack/muesli-certificates.git` into your local keychain.
+
+If the private certificates repo does not have one yet, the first `Developer ID Application` certificate may still need to be created manually by the Apple Developer Account Holder using a CSR. After that first certificate is imported into Keychain and stored in `match`, future `setup_signing` runs can sync it automatically.
+
+If you want to use a different private certificates repo later, override it with `MATCH_GIT_URL`.
+
+If you already have a `Developer ID Application` certificate installed locally, you can skip `setup_signing` and go straight to `release`.
+
+### Reinstall Locally Without Changing App Identity
+
+Build and reinstall a clean release copy into `/Applications`:
+
+```bash
+scripts/reinstall_local_app.sh
+```
+
+If you want macOS permissions to have the best chance of persisting between reinstalls, provide the same signing identity every time. `local_install` now prefers `Developer ID Application` automatically when one is available so the local app matches the notarized release identity more closely:
+
+```bash
+MUESLI_INSTALL_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+scripts/reinstall_local_app.sh
+```
+
+`Apple Distribution` and `Apple Development` still work as fallbacks if you need them, but they are less ideal for matching the shipped direct-download build.
+
+### Signed And Notarized Releases
+
+The release lane builds the app, re-signs it with a `Developer ID Application` certificate, notarizes the app and DMG, staples the results, and writes DMG/ZIP artifacts plus SHA-256 checksums to `build/release-artifacts/`:
+
+```bash
+APP_STORE_CONNECT_API_KEY_PATH="fastlane/credentials/AuthKey_ABC123XYZ.json" \
+scripts/release_macos.sh
+```
+
+If you prefer Apple ID authentication instead of an API key:
+
+```bash
+FASTLANE_USER="you@example.com" \
+FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx" \
+scripts/release_macos.sh
+```
+
+The lane auto-detects the first `Developer ID Application` identity in your keychain. You can override it explicitly:
+
+```bash
+MUESLI_RELEASE_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+APP_STORE_CONNECT_API_KEY_PATH="fastlane/credentials/AuthKey_ABC123XYZ.json" \
+scripts/release_macos.sh
 ```
 
 ## Tech Stack

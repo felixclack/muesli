@@ -1,0 +1,321 @@
+fastlane_version "2.229.1"
+
+default_platform(:mac)
+
+require "base64"
+require "fileutils"
+require "openssl"
+require "pathname"
+require "shellwords"
+
+def repo_root
+  File.expand_path("..", __dir__)
+end
+
+def info_plist_path
+  File.join(repo_root, "Muesli", "Info.plist")
+end
+
+def default_bundle_identifier
+  (ENV["MUESLI_APP_IDENTIFIER"] || "com.felixclack.muesli").strip
+end
+
+def default_team_id
+  (ENV["FASTLANE_TEAM_ID"] || "4754Y2K7H2").strip
+end
+
+def default_match_git_url
+  (ENV["MATCH_GIT_URL"] || "git@github.com:felixclack/muesli-certificates.git").strip
+end
+
+def shellescape(value)
+  Shellwords.escape(value.to_s)
+end
+
+def repo_relative_path(value)
+  path = value.to_s.strip
+  return path if path.empty? || Pathname.new(path).absolute?
+
+  File.expand_path(path, repo_root)
+end
+
+def first_identity(output, prefix)
+  output.lines.filter_map do |line|
+    line[/\"(#{Regexp.escape(prefix)}:[^\"]+)\"/, 1]
+  end.first
+end
+
+platform :mac do
+  desc "Show current signing and notarization readiness"
+  lane :doctor do
+    identities_output = sh("security find-identity -v -p codesigning", log: false)
+    version = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' #{shellescape(info_plist_path)}", log: false).strip
+    build = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' #{shellescape(info_plist_path)}", log: false).strip
+
+    UI.message("Bundle ID: #{default_bundle_identifier}")
+    UI.message("Team ID: #{default_team_id}")
+    UI.message("Version: #{version} (#{build})")
+
+    developer_id = first_identity(identities_output, "Developer ID Application")
+    apple_distribution = first_identity(identities_output, "Apple Distribution")
+    apple_development = first_identity(identities_output, "Apple Development")
+
+    developer_id ? UI.success("Developer ID identity detected: #{developer_id}") : UI.important("No Developer ID Application identity detected.")
+    apple_distribution ? UI.success("Apple Distribution identity detected: #{apple_distribution}") : UI.important("No Apple Distribution identity detected.")
+    apple_development ? UI.success("Apple Development identity detected: #{apple_development}") : UI.important("No Apple Development identity detected.")
+
+    api_key_path = repo_relative_path(ENV["APP_STORE_CONNECT_API_KEY_PATH"])
+    fastlane_user = ENV["FASTLANE_USER"].to_s.strip
+    app_specific_password = ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"].to_s.strip
+    match_git_url = default_match_git_url
+
+    if api_key_path.empty?
+      if fastlane_user.empty?
+        UI.important("Notarization auth is not configured. Set APP_STORE_CONNECT_API_KEY_PATH or FASTLANE_USER.")
+      elsif app_specific_password.empty?
+        UI.important("FASTLANE_USER is set, but FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD is missing.")
+      else
+        UI.success("Apple ID notarization auth looks configured for #{fastlane_user}.")
+      end
+    else
+      UI.success("App Store Connect API key configured at #{api_key_path}.")
+    end
+
+    UI.success("match repository configured: #{match_git_url}")
+  end
+
+  desc "Create or sync a Developer ID Application certificate with match"
+  lane :setup_signing do
+    match_git_url = default_match_git_url
+
+    api_key_path = repo_relative_path(ENV["APP_STORE_CONNECT_API_KEY_PATH"])
+    fastlane_user = ENV["FASTLANE_USER"].to_s.strip
+    UI.user_error!("Set APP_STORE_CONNECT_API_KEY_PATH or FASTLANE_USER before running setup_signing.") if api_key_path.empty? && fastlane_user.empty?
+
+    sync_options = {
+      type: "developer_id",
+      readonly: true,
+      git_url: match_git_url,
+      app_identifier: default_bundle_identifier,
+      team_id: default_team_id,
+      skip_provisioning_profiles: true
+    }
+    sync_options[:api_key_path] = api_key_path unless api_key_path.empty?
+    sync_options[:username] = fastlane_user unless fastlane_user.empty?
+
+    begin
+      UI.message("Checking match for an existing Developer ID certificate...")
+      match(sync_options)
+    rescue => error
+      UI.important("No existing Developer ID certificate was synced from match: #{error.message}")
+    end
+
+    identities_output = sh("security find-identity -v -p codesigning", log: false)
+    developer_id = first_identity(identities_output, "Developer ID Application")
+
+    if developer_id.to_s.empty? && api_key_path.empty?
+      match(
+        type: "developer_id",
+        readonly: false,
+        git_url: match_git_url,
+        app_identifier: default_bundle_identifier,
+        team_id: default_team_id,
+        skip_provisioning_profiles: true,
+        username: fastlane_user
+      )
+    elsif developer_id.to_s.empty?
+      import_path = File.join(repo_root, "build", "fastlane-match-import")
+      FileUtils.rm_rf(import_path)
+      FileUtils.mkdir_p(import_path)
+
+      UI.message("Creating authorization token for App Store Connect API")
+      api_token = Spaceship::ConnectAPI::Token.from(filepath: api_key_path)
+      UI.user_error!("Could not load App Store Connect API token from #{api_key_path}.") if api_token.nil?
+      Spaceship::ConnectAPI.token = api_token
+
+      UI.message("Generating a new Developer ID Application certificate...")
+      csr, private_key = Spaceship::ConnectAPI::Certificate.create_certificate_signing_request
+      certificate = Spaceship::ConnectAPI::Certificate.create(
+        certificate_type: Spaceship::ConnectAPI::Certificate::CertificateType::DEVELOPER_ID_APPLICATION,
+        csr_content: csr.to_pem
+      )
+
+      certificate_der = Base64.decode64(certificate.certificate_content)
+      certificate_path = File.join(import_path, "#{certificate.id}.cer")
+      File.binwrite(certificate_path, certificate_der)
+
+      x509_certificate = OpenSSL::X509::Certificate.new(certificate_der)
+      pkcs12_path = File.join(import_path, "#{certificate.id}.p12")
+      pkcs12 = OpenSSL::PKCS12.create("", certificate.display_name || certificate.id, private_key, x509_certificate)
+      File.binwrite(pkcs12_path, pkcs12.to_der)
+
+      login_keychain = File.expand_path("~/Library/Keychains/login.keychain-db")
+      FastlaneCore::KeychainImporter.import_file(pkcs12_path, login_keychain, skip_set_partition_list: false)
+      FastlaneCore::KeychainImporter.import_file(certificate_path, login_keychain, skip_set_partition_list: false)
+
+      UI.message("Importing the Developer ID certificate into match...")
+      sh(
+        [
+          "printf '%s\\n%s\\n\\n' #{shellescape(certificate_path)} #{shellescape(pkcs12_path)}",
+          "|",
+          "fastlane match import",
+          "type:developer_id",
+          "skip_provisioning_profiles:true",
+          "skip_certificate_matching:true",
+          "git_url:#{shellescape(match_git_url)}",
+          "team_id:#{shellescape(default_team_id)}"
+        ].join(" ")
+      )
+    end
+
+    identities_output = sh("security find-identity -v -p codesigning", log: false)
+    developer_id = first_identity(identities_output, "Developer ID Application")
+    UI.user_error!("match completed, but no Developer ID Application identity is available in the keychain.") if developer_id.to_s.empty?
+
+    UI.success("Developer ID identity is ready: #{developer_id}")
+  end
+
+  desc "Build, sign, reinstall to /Applications, and launch the local app"
+  lane :local_install do
+    root = repo_root
+    derived_data_path = File.join(root, "build", "LocalInstallDerivedData")
+    app_path = File.join(derived_data_path, "Build", "Products", "Release", "Muesli.app")
+    install_path = "/Applications/Muesli.app"
+
+    identities_output = sh("security find-identity -v -p codesigning", log: false)
+    signing_identity = ENV["MUESLI_INSTALL_SIGNING_IDENTITY"].to_s.strip
+    signing_identity = first_identity(identities_output, "Developer ID Application") if signing_identity.empty?
+    signing_identity = first_identity(identities_output, "Apple Distribution") if signing_identity.empty?
+    signing_identity = first_identity(identities_output, "Apple Development") if signing_identity.empty?
+
+    UI.message("Building a clean local app bundle...")
+    sh(
+      [
+        "xcodebuild",
+        "-project", shellescape(File.join(root, "Muesli.xcodeproj")),
+        "-scheme", shellescape("Muesli"),
+        "-configuration", shellescape("Release"),
+        "-destination", shellescape("generic/platform=macOS"),
+        "-derivedDataPath", shellescape(derived_data_path),
+        "clean",
+        "build"
+      ].join(" ")
+    )
+
+    if signing_identity.empty?
+      UI.important("No stable signing identity detected; installing the ad hoc-signed build.")
+      UI.important("macOS permissions are less likely to persist across reinstalls with ad hoc signatures.")
+    else
+      UI.message("Re-signing app with #{signing_identity}...")
+      sh("codesign --force --deep --sign #{shellescape(signing_identity)} #{shellescape(app_path)}")
+    end
+
+    UI.message("Installing to #{install_path}...")
+    sh("pkill -x Muesli >/dev/null 2>&1 || true")
+    sh("mkdir -p #{shellescape(install_path)}")
+    sh("rsync -a --delete #{shellescape("#{app_path}/")} #{shellescape("#{install_path}/")}")
+
+    UI.message("Launching #{install_path}...")
+    sh("open -a #{shellescape(install_path)}")
+    sh("codesign -dv --verbose=4 #{shellescape(install_path)} 2>&1 | sed -n '1,20p'")
+  end
+
+  desc "Build, sign, notarize, and package a release DMG and ZIP"
+  lane :release do
+    root = repo_root
+    version = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' #{shellescape(info_plist_path)}", log: false).strip
+    artifacts_path = File.join(root, "build", "release-artifacts")
+    derived_data_path = File.join(root, "build", "ReleaseDerivedData-#{version}")
+    dmg_stage_path = File.join(root, "build", "dmg-stage-#{version}")
+    app_path = File.join(derived_data_path, "Build", "Products", "Release", "Muesli.app")
+    zip_path = File.join(artifacts_path, "Muesli-#{version}-macOS-universal.zip")
+    dmg_path = File.join(artifacts_path, "Muesli-#{version}-macOS-universal.dmg")
+    zip_sum_path = "#{zip_path}.sha256"
+    dmg_sum_path = "#{dmg_path}.sha256"
+
+    identities_output = sh("security find-identity -v -p codesigning", log: false)
+    signing_identity = ENV["MUESLI_RELEASE_SIGNING_IDENTITY"].to_s.strip
+    signing_identity = first_identity(identities_output, "Developer ID Application") if signing_identity.empty?
+    UI.user_error!("No Developer ID Application identity found. Run `fastlane mac setup_signing` or install one in Keychain Access.") if signing_identity.empty?
+
+    api_key_path = repo_relative_path(ENV["APP_STORE_CONNECT_API_KEY_PATH"])
+    fastlane_user = ENV["FASTLANE_USER"].to_s.strip
+    app_specific_password = ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"].to_s.strip
+    UI.user_error!("Set APP_STORE_CONNECT_API_KEY_PATH or FASTLANE_USER before running release.") if api_key_path.empty? && fastlane_user.empty?
+    UI.user_error!("Set FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD when using FASTLANE_USER for notarization.") if api_key_path.empty? && app_specific_password.empty?
+
+    FileUtils.rm_rf(derived_data_path)
+    FileUtils.rm_rf(dmg_stage_path)
+    FileUtils.mkdir_p(artifacts_path)
+    FileUtils.rm_f(zip_path)
+    FileUtils.rm_f(zip_sum_path)
+    FileUtils.rm_f(dmg_path)
+    FileUtils.rm_f(dmg_sum_path)
+
+    UI.message("Building release app #{version}...")
+    sh(
+      [
+        "xcodebuild",
+        "-project", shellescape(File.join(root, "Muesli.xcodeproj")),
+        "-scheme", shellescape("Muesli"),
+        "-configuration", shellescape("Release"),
+        "-destination", shellescape("generic/platform=macOS"),
+        "-derivedDataPath", shellescape(derived_data_path),
+        "clean",
+        "build"
+      ].join(" ")
+    )
+
+    UI.message("Signing app with #{signing_identity}...")
+    sh("codesign --force --deep --options runtime --sign #{shellescape(signing_identity)} #{shellescape(app_path)}")
+    sh("codesign --verify --deep --strict --verbose=2 #{shellescape(app_path)}")
+
+    notarize_options = {
+      package: app_path,
+      bundle_id: default_bundle_identifier,
+      print_log: true,
+      use_notarytool: true
+    }
+    notarize_options[:api_key_path] = api_key_path unless api_key_path.empty?
+    notarize_options[:username] = fastlane_user unless !api_key_path.empty? || fastlane_user.empty?
+
+    UI.message("Submitting app for notarization...")
+    notarize(notarize_options)
+    sh("xcrun stapler staple #{shellescape(app_path)}")
+
+    UI.message("Packaging release artifacts...")
+    sh("ditto -c -k --keepParent #{shellescape(app_path)} #{shellescape(zip_path)}")
+    FileUtils.mkdir_p(dmg_stage_path)
+    sh("rsync -a #{shellescape(app_path)} #{shellescape("#{dmg_stage_path}/")}")
+    sh("ln -s /Applications #{shellescape(File.join(dmg_stage_path, 'Applications'))}")
+    sh(
+      [
+        "hdiutil",
+        "create",
+        "-volname", shellescape("Muesli"),
+        "-srcfolder", shellescape(dmg_stage_path),
+        "-format", shellescape("UDZO"),
+        shellescape(dmg_path),
+        ">/dev/null"
+      ].join(" ")
+    )
+
+    UI.message("Submitting DMG for notarization...")
+    notarize(
+      notarize_options.merge(
+        package: dmg_path,
+        bundle_id: "#{default_bundle_identifier}.dmg"
+      )
+    )
+    sh("xcrun stapler staple #{shellescape(dmg_path)}")
+
+    sh("shasum -a 256 #{shellescape(zip_path)} > #{shellescape(zip_sum_path)}")
+    sh("shasum -a 256 #{shellescape(dmg_path)} > #{shellescape(dmg_sum_path)}")
+
+    UI.success("Release artifacts:")
+    UI.message(zip_path)
+    UI.message(zip_sum_path)
+    UI.message(dmg_path)
+    UI.message(dmg_sum_path)
+  end
+end

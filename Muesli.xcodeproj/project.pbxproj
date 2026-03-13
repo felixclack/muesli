@@ -11,6 +11,7 @@
 		109F9F24D61CFAC1086234A2 /* AudioSampleWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814F30F00CBB33E67724E75A /* AudioSampleWriter.swift */; };
 		1EC8F8B4ED3CEE238C574721 /* TranscriptComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 577F7CF80AC8D17ACCE4F29F /* TranscriptComposer.swift */; };
 		259A66E6073191C5CE1B19E1 /* HistoryWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47D8A41DEE1D4A5BBF1AFB83 /* HistoryWindowView.swift */; };
+		29D5799A31CA0A327D4603C5 /* PermissionsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD3FF51D17619BA3523959D7 /* PermissionsServiceTests.swift */; };
 		34532FA5FA3CE5A672F3773C /* MeetingURLExtractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B721F9595B4C2E789310054 /* MeetingURLExtractorTests.swift */; };
 		39173D4BD4D4D31DE5772CF9 /* ProviderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324367AFA7EE687AD55A5327 /* ProviderState.swift */; };
 		3F9827FDB0BF2CBD78750D6B /* MeetingURLExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D90C8B8C41835D494C03C95 /* MeetingURLExtractor.swift */; };
@@ -88,6 +89,7 @@
 		A3D23E9EA8996F87ABD8482E /* MeetingRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingRecorder.swift; sourceTree = "<group>"; };
 		A6747AE44BB480298EF95D0A /* GatherAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatherAdapter.swift; sourceTree = "<group>"; };
 		A7DD1301061486D2EC8DE677 /* CalendarMeetingSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMeetingSource.swift; sourceTree = "<group>"; };
+		AD3FF51D17619BA3523959D7 /* PermissionsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsServiceTests.swift; sourceTree = "<group>"; };
 		B6319871850D187613DB5CF1 /* DiaController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaController.swift; sourceTree = "<group>"; };
 		B7C25BA9CE4BB726C2AF2DF8 /* DiaMeetAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaMeetAdapter.swift; sourceTree = "<group>"; };
 		B93E2EF81B17E2C35A1B23AE /* MeetingProviderKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingProviderKind.swift; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 			children = (
 				11CC7307F11EB09160BAF0E6 /* MeetingArmerTests.swift */,
 				8B721F9595B4C2E789310054 /* MeetingURLExtractorTests.swift */,
+				AD3FF51D17619BA3523959D7 /* PermissionsServiceTests.swift */,
 				8946E3819D28C0C53289B8A7 /* SessionRepositoryTests.swift */,
 				4D199ED68497608CA6F7681D /* TranscriptComposerTests.swift */,
 			);
@@ -419,6 +422,7 @@
 			files = (
 				BAF2163B5FD790E42BDEED63 /* MeetingArmerTests.swift in Sources */,
 				34532FA5FA3CE5A672F3773C /* MeetingURLExtractorTests.swift in Sources */,
+				29D5799A31CA0A327D4603C5 /* PermissionsServiceTests.swift in Sources */,
 				4E7A2253AC4418870E35F051 /* SessionRepositoryTests.swift in Sources */,
 				C14D34373BF1A2300417D6E9 /* TranscriptComposerTests.swift in Sources */,
 			);
@@ -493,7 +497,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.muesli;
 				PRODUCT_NAME = Muesli;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -535,7 +539,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.muesli;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -591,7 +595,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.muesli;
 				PRODUCT_NAME = Muesli;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -633,7 +637,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.Muesli;
+				PRODUCT_BUNDLE_IDENTIFIER = com.felixclack.muesli;
 				SDKROOT = macosx;
 			};
 			name = Debug;
