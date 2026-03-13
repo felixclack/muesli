@@ -28,7 +28,6 @@ final class MuesliAppModel: ObservableObject {
     private var automationTask: Task<Void, Never>?
     private var activationTask: Task<Void, Never>?
     private var negativePollDuration: TimeInterval = 0
-    private var attemptedInitialPermissionBootstrap = false
     private var lastMissingRequirementSignature = ""
     private var lastArmedMeetingSignature = ""
 
@@ -73,7 +72,6 @@ final class MuesliAppModel: ObservableObject {
         Task {
             await loadSessions()
             await refreshRequirements()
-            await bootstrapPermissionsIfNeeded()
         }
     }
 
@@ -103,6 +101,7 @@ final class MuesliAppModel: ObservableObject {
 
     func requestPermissionsAndModel() {
         Task {
+            activateForPermissionPrompt()
             let pendingRequirements = requirements.filter { !$0.satisfied }
             var requirementNeedingSettings: SetupRequirement?
 
@@ -131,6 +130,7 @@ final class MuesliAppModel: ObservableObject {
 
     func resolveRequirement(_ requirement: SetupRequirement) {
         Task {
+            activateForPermissionPrompt()
             switch requirement.kind {
             case .model:
                 do {
@@ -325,22 +325,6 @@ final class MuesliAppModel: ObservableObject {
         }
     }
 
-    private func bootstrapPermissionsIfNeeded() async {
-        guard !attemptedInitialPermissionBootstrap else { return }
-        attemptedInitialPermissionBootstrap = true
-
-        let missingPermissions = requirements
-            .filter { !$0.satisfied && $0.kind != .model }
-            .map(\.title)
-
-        guard !missingPermissions.isEmpty else { return }
-
-        let missingPermissionsSummary = missingPermissions.joined(separator: ", ")
-        Logger.permissions.info("Bootstrapping permissions for: \(missingPermissionsSummary, privacy: .public)")
-        await permissionsService.requestMissingPermissions()
-        await refreshRequirements()
-    }
-
     private func beginSession(for meeting: ArmedMeeting) async {
         do {
             Logger.app.info("Starting session for \(meeting.candidate.title, privacy: .public)")
@@ -512,6 +496,10 @@ final class MuesliAppModel: ObservableObject {
         if NSWorkspace.shared.open(fallbackURL) {
             Logger.permissions.info("Opened System Settings fallback for \(kind.rawValue, privacy: .public)")
         }
+    }
+
+    private func activateForPermissionPrompt() {
+        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
     private func logRequirementsIfNeeded() {
