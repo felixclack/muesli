@@ -57,7 +57,7 @@ actor PermissionsService {
     private let requestCalendarAccess: @Sendable () async -> Bool
     private let screenRecordingAuthorized: @Sendable () -> Bool
     private let requestScreenRecordingAccess: @Sendable () -> Bool
-    private let microphonePermission: @Sendable () -> AVAudioApplication.recordPermission
+    private let microphonePermission: @Sendable () async -> AVAudioApplication.recordPermission
     private let requestMicrophonePermission: @Sendable () async -> Bool
     private let diaProbe: @Sendable () async -> Bool
     private let modelProbe: @Sendable () async -> Bool
@@ -69,13 +69,17 @@ actor PermissionsService {
         modelProbe: @escaping @Sendable () async -> Bool,
         screenRecordingAuthorized: @escaping @Sendable () -> Bool = { CGPreflightScreenCaptureAccess() },
         requestScreenRecordingAccess: @escaping @Sendable () -> Bool = { CGRequestScreenCaptureAccess() },
-        microphonePermission: @escaping @Sendable () -> AVAudioApplication.recordPermission = { AVAudioApplication.shared.recordPermission },
+        microphonePermission: @escaping @Sendable () async -> AVAudioApplication.recordPermission = {
+            await MainActor.run { AVAudioApplication.shared.recordPermission }
+        },
         requestMicrophonePermission: @escaping @Sendable () async -> Bool = {
             await withCheckedContinuation { continuation in
+                let completion = { (granted: Bool) in
+                    continuation.resume(returning: granted)
+                }
+
                 Task { @MainActor in
-                    AVAudioApplication.requestRecordPermission { granted in
-                        continuation.resume(returning: granted)
-                    }
+                    AVAudioApplication.requestRecordPermission(completionHandler: completion)
                 }
             }
         }
@@ -95,7 +99,7 @@ actor PermissionsService {
         requestCalendarAccess: @escaping @Sendable () async -> Bool,
         screenRecordingAuthorized: @escaping @Sendable () -> Bool,
         requestScreenRecordingAccess: @escaping @Sendable () -> Bool,
-        microphonePermission: @escaping @Sendable () -> AVAudioApplication.recordPermission,
+        microphonePermission: @escaping @Sendable () async -> AVAudioApplication.recordPermission,
         requestMicrophonePermission: @escaping @Sendable () async -> Bool,
         diaProbe: @escaping @Sendable () async -> Bool,
         modelProbe: @escaping @Sendable () async -> Bool
@@ -119,7 +123,7 @@ actor PermissionsService {
 
     func currentRequirements() async -> [SetupRequirement] {
         let calendarStatus = await calendarAuthorizationStatus()
-        let micStatus = resolvedMicrophonePermission()
+        let micStatus = await resolvedMicrophonePermission()
         let diaAuthorized = await diaProbe()
         let modelReady = await modelProbe()
 
@@ -177,12 +181,12 @@ actor PermissionsService {
             let granted = requestScreenRecordingAccess()
             return granted || screenRecordingAuthorized()
         case .microphone:
-            let status = resolvedMicrophonePermission()
+            let status = await resolvedMicrophonePermission()
             guard status != .granted else { return true }
             guard status == .undetermined else { return false }
 
             grantedMicrophonePermissionInProcess = await requestMicrophonePermission()
-            return resolvedMicrophonePermission() == .granted
+            return await resolvedMicrophonePermission() == .granted
         case .diaAutomation:
             return await diaProbe()
         case .model:
@@ -190,8 +194,8 @@ actor PermissionsService {
         }
     }
 
-    private func resolvedMicrophonePermission() -> AVAudioApplication.recordPermission {
-        let livePermission = microphonePermission()
+    private func resolvedMicrophonePermission() async -> AVAudioApplication.recordPermission {
+        let livePermission = await microphonePermission()
 
         switch livePermission {
         case .granted:

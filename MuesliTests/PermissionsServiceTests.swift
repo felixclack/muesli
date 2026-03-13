@@ -109,14 +109,14 @@ final class PermissionsServiceTests: XCTestCase {
             )
         ]
 
-        XCTAssertTrue(gate.shouldPrompt(for: requirements, launchAtLoginEnabled: false))
+        XCTAssertTrue(gate.shouldPrompt(for: requirements))
 
         gate.markPrompted()
 
-        XCTAssertFalse(gate.shouldPrompt(for: requirements, launchAtLoginEnabled: false))
+        XCTAssertFalse(gate.shouldPrompt(for: requirements))
     }
 
-    func testInitialPermissionPromptGateSkipsDeniedAndLaunchAtLoginStates() {
+    func testInitialPermissionPromptGateSkipsDeniedRequirements() {
         let (gate, defaults, suiteName) = makeInitialPermissionPromptGate()
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
@@ -130,19 +130,7 @@ final class PermissionsServiceTests: XCTestCase {
             )
         ]
 
-        XCTAssertFalse(gate.shouldPrompt(for: deniedRequirements, launchAtLoginEnabled: false))
-
-        let requestableRequirements = [
-            SetupRequirement(
-                kind: .calendar,
-                title: "Calendar",
-                satisfied: false,
-                instructions: "Grant Calendar Full Access so Muesli can arm upcoming meetings.",
-                resolution: .requestAccess
-            )
-        ]
-
-        XCTAssertFalse(gate.shouldPrompt(for: requestableRequirements, launchAtLoginEnabled: true))
+        XCTAssertFalse(gate.shouldPrompt(for: deniedRequirements))
     }
 
     private func makeInitialPermissionPromptGate() -> (InitialPermissionPromptGate, UserDefaults, String) {

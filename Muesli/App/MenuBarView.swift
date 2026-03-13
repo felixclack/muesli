@@ -85,6 +85,7 @@ struct MenuBarView: View {
         .frame(width: 340)
         .onAppear {
             model.refreshNow()
+            model.requestPromptablePermissionsIfNeeded()
         }
     }
 

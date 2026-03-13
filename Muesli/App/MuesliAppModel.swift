@@ -104,6 +104,12 @@ final class MuesliAppModel: ObservableObject {
         Task { await tick() }
     }
 
+    func requestPromptablePermissionsIfNeeded() {
+        Task {
+            await maybePromptForInitialPermissions()
+        }
+    }
+
     func requestPermissionsAndModel() {
         Task {
             activateForPermissionPrompt()
@@ -316,10 +322,7 @@ final class MuesliAppModel: ObservableObject {
     }
 
     private func maybePromptForInitialPermissions() async {
-        guard initialPermissionPromptGate.shouldPrompt(
-            for: requirements,
-            launchAtLoginEnabled: settingsStore.settings.launchAtLoginEnabled
-        ) else {
+        guard initialPermissionPromptGate.shouldPrompt(for: requirements) else {
             return
         }
 
@@ -570,8 +573,7 @@ struct InitialPermissionPromptGate {
         self.defaults = defaults
     }
 
-    func shouldPrompt(for requirements: [SetupRequirement], launchAtLoginEnabled: Bool) -> Bool {
-        guard !launchAtLoginEnabled else { return false }
+    func shouldPrompt(for requirements: [SetupRequirement]) -> Bool {
         guard defaults.bool(forKey: Self.key) == false else { return false }
 
         return requirements.contains { requirement in
