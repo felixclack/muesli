@@ -38,7 +38,9 @@ struct SettingsView: View {
                 .foregroundStyle(model.canRecordManually ? .green : .orange)
 
                 ForEach(recordingRequirements) { requirement in
-                    RequirementRow(requirement: requirement)
+                    RequirementRow(requirement: requirement) {
+                        model.resolveRequirement(requirement)
+                    }
                 }
             }
 
@@ -48,12 +50,15 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
 
                 ForEach(featureRequirements) { requirement in
-                    RequirementRow(requirement: requirement)
+                    RequirementRow(requirement: requirement) {
+                        model.resolveRequirement(requirement)
+                    }
                 }
 
-                Button("Grant Permissions & Download Model") {
+                Button("Resolve Missing Setup") {
                     model.requestPermissionsAndModel()
                 }
+                .disabled(model.requirements.allSatisfy(\.satisfied))
             }
 
             if let lastError = model.lastError {
@@ -70,6 +75,7 @@ struct SettingsView: View {
 
 private struct RequirementRow: View {
     let requirement: SetupRequirement
+    let action: () -> Void
 
     var body: some View {
         HStack(alignment: .top) {
@@ -81,6 +87,14 @@ private struct RequirementRow: View {
                 Text(requirement.instructions)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 12)
+
+            if let actionTitle = requirement.actionTitle {
+                Button(actionTitle, action: action)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
             }
         }
     }

@@ -12,12 +12,35 @@ struct SetupRequirement: Identifiable, Sendable {
         case model
     }
 
+    enum Resolution: String, Sendable {
+        case requestAccess
+        case openSystemSettings
+        case downloadModel
+        case retry
+    }
+
     let kind: Kind
     let title: String
     let satisfied: Bool
     let instructions: String
+    let resolution: Resolution?
 
     var id: String { kind.rawValue }
+
+    var actionTitle: String? {
+        switch resolution {
+        case .requestAccess:
+            "Grant Access"
+        case .openSystemSettings:
+            "Open Settings"
+        case .downloadModel:
+            "Download"
+        case .retry:
+            "Retry"
+        case nil:
+            nil
+        }
+    }
 
     var blocksManualRecording: Bool {
         switch kind {
@@ -49,8 +72,10 @@ actor PermissionsService {
         microphonePermission: @escaping @Sendable () -> AVAudioApplication.recordPermission = { AVAudioApplication.shared.recordPermission },
         requestMicrophonePermission: @escaping @Sendable () async -> Bool = {
             await withCheckedContinuation { continuation in
-                AVAudioApplication.requestRecordPermission { granted in
-                    continuation.resume(returning: granted)
+                Task { @MainActor in
+                    AVAudioApplication.requestRecordPermission { granted in
+                        continuation.resume(returning: granted)
+                    }
                 }
             }
         }
@@ -86,58 +111,83 @@ actor PermissionsService {
     }
 
     func requestMissingPermissions() async {
-        if !screenRecordingAuthorized() {
-            _ = requestScreenRecordingAccess()
-        }
-
-        if resolvedMicrophonePermission() == .undetermined {
-            grantedMicrophonePermissionInProcess = await requestMicrophonePermission()
-        }
-
-        if await calendarAuthorizationStatus() == .notDetermined {
-            _ = await requestCalendarAccess()
-        }
-
-        _ = await diaProbe()
+        _ = await resolve(.screenRecording)
+        _ = await resolve(.microphone)
+        _ = await resolve(.calendar)
+        _ = await resolve(.diaAutomation)
     }
 
     func currentRequirements() async -> [SetupRequirement] {
         let calendarStatus = await calendarAuthorizationStatus()
         let micStatus = resolvedMicrophonePermission()
         let diaAuthorized = await diaProbe()
+        let modelReady = await modelProbe()
 
         return [
             SetupRequirement(
                 kind: .calendar,
                 title: "Calendar",
                 satisfied: calendarStatus == .fullAccess,
-                instructions: "Grant Calendar Full Access so Muesli can arm upcoming meetings."
+                instructions: "Grant Calendar Full Access so Muesli can arm upcoming meetings.",
+                resolution: calendarStatus == .fullAccess ? nil : calendarResolution(for: calendarStatus)
             ),
             SetupRequirement(
                 kind: .screenRecording,
                 title: "Screen Recording",
                 satisfied: screenRecordingAuthorized(),
-                instructions: "Grant Screen Recording so Muesli can capture system audio via ScreenCaptureKit."
+                instructions: "Grant Screen Recording so Muesli can capture system audio via ScreenCaptureKit.",
+                resolution: screenRecordingAuthorized() ? nil : .requestAccess
             ),
             SetupRequirement(
                 kind: .microphone,
                 title: "Microphone",
                 satisfied: micStatus == .granted,
-                instructions: "Grant Microphone access so Muesli can capture your voice."
+                instructions: "Grant Microphone access so Muesli can capture your voice.",
+                resolution: microphoneResolution(for: micStatus)
             ),
             SetupRequirement(
                 kind: .diaAutomation,
                 title: "Dia Automation",
                 satisfied: diaAuthorized,
-                instructions: "Allow Muesli to control Dia so it can detect Google Meet joins."
+                instructions: "Allow Muesli to control Dia so it can detect Google Meet joins.",
+                resolution: diaAuthorized ? nil : .retry
             ),
             SetupRequirement(
                 kind: .model,
                 title: "Whisper Model",
-                satisfied: await modelProbe(),
-                instructions: "Download the English Whisper model so local transcription can run."
+                satisfied: modelReady,
+                instructions: "Download the English Whisper model so local transcription can run.",
+                resolution: modelReady ? nil : .downloadModel
             )
         ]
+    }
+
+    func resolve(_ kind: SetupRequirement.Kind) async -> Bool {
+        switch kind {
+        case .calendar:
+            let status = await calendarAuthorizationStatus()
+            guard status != .fullAccess else { return true }
+            guard status == .notDetermined else { return false }
+            return await requestCalendarAccess()
+        case .screenRecording:
+            if screenRecordingAuthorized() {
+                return true
+            }
+
+            let granted = requestScreenRecordingAccess()
+            return granted || screenRecordingAuthorized()
+        case .microphone:
+            let status = resolvedMicrophonePermission()
+            guard status != .granted else { return true }
+            guard status == .undetermined else { return false }
+
+            grantedMicrophonePermissionInProcess = await requestMicrophonePermission()
+            return resolvedMicrophonePermission() == .granted
+        case .diaAutomation:
+            return await diaProbe()
+        case .model:
+            return await modelProbe()
+        }
     }
 
     private func resolvedMicrophonePermission() -> AVAudioApplication.recordPermission {
@@ -154,6 +204,30 @@ actor PermissionsService {
             return grantedMicrophonePermissionInProcess ? .granted : .undetermined
         @unknown default:
             return livePermission
+        }
+    }
+
+    private func calendarResolution(for status: EKAuthorizationStatus) -> SetupRequirement.Resolution {
+        switch status {
+        case .notDetermined:
+            .requestAccess
+        case .fullAccess:
+            .requestAccess
+        default:
+            .openSystemSettings
+        }
+    }
+
+    private func microphoneResolution(for status: AVAudioApplication.recordPermission) -> SetupRequirement.Resolution? {
+        switch status {
+        case .granted:
+            nil
+        case .undetermined:
+            .requestAccess
+        case .denied:
+            .openSystemSettings
+        @unknown default:
+            .openSystemSettings
         }
     }
 }

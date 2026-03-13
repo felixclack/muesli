@@ -60,6 +60,40 @@ final class PermissionsServiceTests: XCTestCase {
 
         XCTAssertEqual(requirements.first(where: { $0.kind == .microphone })?.satisfied, true)
     }
+
+    func testCurrentRequirementsMarksDeniedMicrophoneAsOpenSettingsStep() async {
+        let service = PermissionsService(
+            calendarAuthorizationStatus: { .fullAccess },
+            requestCalendarAccess: { true },
+            screenRecordingAuthorized: { true },
+            requestScreenRecordingAccess: { true },
+            microphonePermission: { .denied },
+            requestMicrophonePermission: { true },
+            diaProbe: { true },
+            modelProbe: { true }
+        )
+
+        let requirements = await service.currentRequirements()
+
+        XCTAssertEqual(requirements.first(where: { $0.kind == .microphone })?.resolution, .openSystemSettings)
+    }
+
+    func testCurrentRequirementsMarksUndeterminedCalendarAsRequestAccessStep() async {
+        let service = PermissionsService(
+            calendarAuthorizationStatus: { .notDetermined },
+            requestCalendarAccess: { true },
+            screenRecordingAuthorized: { true },
+            requestScreenRecordingAccess: { true },
+            microphonePermission: { .granted },
+            requestMicrophonePermission: { true },
+            diaProbe: { true },
+            modelProbe: { true }
+        )
+
+        let requirements = await service.currentRequirements()
+
+        XCTAssertEqual(requirements.first(where: { $0.kind == .calendar })?.resolution, .requestAccess)
+    }
 }
 
 private actor PermissionRequestRecorder {

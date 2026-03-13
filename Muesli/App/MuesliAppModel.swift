@@ -103,12 +103,48 @@ final class MuesliAppModel: ObservableObject {
 
     func requestPermissionsAndModel() {
         Task {
-            await permissionsService.requestMissingPermissions()
-            do {
-                _ = try await transcriber.ensureModel()
-            } catch {
-                setError("Model download failed: \(error.localizedDescription)")
+            let pendingRequirements = requirements.filter { !$0.satisfied }
+            var requirementNeedingSettings: SetupRequirement?
+
+            for requirement in pendingRequirements where requirement.kind != .model {
+                let resolved = await permissionsService.resolve(requirement.kind)
+                if !resolved, requirementNeedingSettings == nil {
+                    requirementNeedingSettings = requirement
+                }
             }
+
+            if pendingRequirements.contains(where: { $0.kind == .model }) {
+                do {
+                    _ = try await transcriber.ensureModel()
+                } catch {
+                    setError("Model download failed: \(error.localizedDescription)")
+                }
+            }
+
+            if let requirementNeedingSettings {
+                openSystemSettings(for: requirementNeedingSettings.kind)
+            }
+
+            await tick()
+        }
+    }
+
+    func resolveRequirement(_ requirement: SetupRequirement) {
+        Task {
+            switch requirement.kind {
+            case .model:
+                do {
+                    _ = try await transcriber.ensureModel()
+                } catch {
+                    setError("Model download failed: \(error.localizedDescription)")
+                }
+            default:
+                let resolved = await permissionsService.resolve(requirement.kind)
+                if !resolved {
+                    openSystemSettings(for: requirement.kind)
+                }
+            }
+
             await tick()
         }
     }
@@ -451,6 +487,31 @@ final class MuesliAppModel: ObservableObject {
         lastError = message
         status = .failed
         Logger.app.error("\(message, privacy: .public)")
+    }
+
+    private func openSystemSettings(for kind: SetupRequirement.Kind) {
+        let specificURL: URL? = switch kind {
+        case .calendar:
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars")
+        case .screenRecording:
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+        case .microphone:
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
+        case .diaAutomation:
+            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation")
+        case .model:
+            nil
+        }
+
+        if let specificURL, NSWorkspace.shared.open(specificURL) {
+            Logger.permissions.info("Opened System Settings for \(kind.rawValue, privacy: .public)")
+            return
+        }
+
+        let fallbackURL = URL(fileURLWithPath: "/System/Applications/System Settings.app")
+        if NSWorkspace.shared.open(fallbackURL) {
+            Logger.permissions.info("Opened System Settings fallback for \(kind.rawValue, privacy: .public)")
+        }
     }
 
     private func logRequirementsIfNeeded() {
