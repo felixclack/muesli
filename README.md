@@ -228,6 +228,42 @@ APP_STORE_CONNECT_API_KEY_PATH="fastlane/credentials/AuthKey_ABC123XYZ.json" \
 scripts/release_macos.sh
 ```
 
+### GitHub Actions Releases
+
+The repo also supports running the notarized macOS release on GitHub Actions via `.github/workflows/release.yml`.
+
+Add these repository secrets first:
+
+- `APPLE_DEVELOPER_ID_CERTIFICATE_P12_BASE64`: base64-encoded `Developer ID Application` `.p12`
+- `APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD`: password used when exporting that `.p12`
+- `CI_KEYCHAIN_PASSWORD`: random password for the temporary CI keychain
+- `APP_STORE_CONNECT_API_KEY_JSON`: the full Fastlane-compatible App Store Connect API key JSON
+
+To export the certificate from a Mac that already has the signing identity:
+
+```bash
+security export -k ~/Library/Keychains/login.keychain-db \
+  -t identities \
+  -f pkcs12 \
+  -P "your-export-password" \
+  -o fastlane/credentials/muesli-developer-id.p12
+
+base64 < fastlane/credentials/muesli-developer-id.p12 | pbcopy
+```
+
+The workflow supports two modes:
+
+- `workflow_dispatch` to release a chosen ref manually
+- `push` on tags matching `v*`
+
+Manual dispatch defaults to the current `CFBundleShortVersionString` in `Muesli/Info.plist`, so the usual flow is:
+
+1. Bump the app version in git.
+2. Push that commit to GitHub.
+3. Run the `Release macOS` workflow against that ref.
+
+Each run executes `fastlane mac doctor`, the full `xcodebuild` test suite, `fastlane mac release`, uploads the DMG and ZIP as workflow artifacts, and then creates or updates the matching GitHub release.
+
 ## Tech Stack
 
 - SwiftUI for the menu bar app and windows
@@ -246,4 +282,4 @@ This is a V1 intended to get the core flow working end to end on a real Mac setu
 - solid local audio capture
 - recoverable transcription jobs
 
-If you want to try it on another Mac, start from the latest release and expect a one-time manual Gatekeeper bypass until notarization is added.
+If you want to try it on another Mac, start from the latest notarized release.

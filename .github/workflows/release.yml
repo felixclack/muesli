@@ -1,0 +1,168 @@
+name: Release macOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to release
+        required: false
+        default: main
+      tag_name:
+        description: Optional tag name. Defaults to v<CFBundleShortVersionString>.
+        required: false
+      publish_release:
+        description: Publish or update the GitHub release
+        required: false
+        type: boolean
+        default: true
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    env:
+      APP_STORE_CONNECT_API_KEY_PATH: ${{ runner.temp }}/app_store_connect_api_key.json
+      CI_KEYCHAIN_PATH: ${{ runner.temp }}/muesli-signing.keychain-db
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Resolve release metadata
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Muesli/Info.plist)"
+          default_tag="v${version}"
+          tag_name="${default_tag}"
+
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            tag_name="${GITHUB_REF_NAME}"
+          elif [[ -n "${{ inputs.tag_name }}" ]]; then
+            tag_name="${{ inputs.tag_name }}"
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${tag_name}" >> "$GITHUB_OUTPUT"
+          echo "zip_path=build/release-artifacts/Muesli-${version}-macOS-universal.zip" >> "$GITHUB_OUTPUT"
+          echo "dmg_path=build/release-artifacts/Muesli-${version}-macOS-universal.dmg" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches Info.plist version
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_tag="v${{ steps.metadata.outputs.version }}"
+          if [[ "${{ steps.metadata.outputs.tag_name }}" != "${expected_tag}" ]]; then
+            echo "::error::Tag ${{ steps.metadata.outputs.tag_name }} does not match Info.plist version ${expected_tag}."
+            exit 1
+          fi
+
+      - name: Install Developer ID certificate
+        env:
+          APPLE_DEVELOPER_ID_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_P12_BASE64 }}
+          APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          CI_KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/setup_ci_signing.sh
+
+      - name: Write App Store Connect API key
+        env:
+          APP_STORE_CONNECT_API_KEY_JSON: ${{ secrets.APP_STORE_CONNECT_API_KEY_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${APP_STORE_CONNECT_API_KEY_JSON:-}" ]]; then
+            echo "::error::Missing APP_STORE_CONNECT_API_KEY_JSON secret."
+            exit 1
+          fi
+
+          printf '%s' "${APP_STORE_CONNECT_API_KEY_JSON}" > "${APP_STORE_CONNECT_API_KEY_PATH}"
+
+      - name: Verify release environment
+        shell: bash
+        run: bundle exec fastlane mac doctor
+
+      - name: Run test suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -project Muesli.xcodeproj -scheme Muesli -destination 'platform=macOS' -derivedDataPath local-build/DerivedData test
+
+      - name: Build notarized release
+        shell: bash
+        run: bundle exec fastlane mac release
+
+      - name: Upload release artifacts to the workflow run
+        uses: actions/upload-artifact@v4
+        with:
+          name: muesli-${{ steps.metadata.outputs.version }}-macos-release
+          path: |
+            ${{ steps.metadata.outputs.zip_path }}
+            ${{ steps.metadata.outputs.dmg_path }}
+            ${{ steps.metadata.outputs.zip_path }}.sha256
+            ${{ steps.metadata.outputs.dmg_path }}.sha256
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: github.event_name == 'push' || inputs.publish_release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          notes_file="$(mktemp)"
+          cat > "${notes_file}" <<EOF
+          Automated notarized macOS release built from \`${GITHUB_SHA}\`.
+
+          Version: \`${{ steps.metadata.outputs.version }}\`
+          Tag: \`${{ steps.metadata.outputs.tag_name }}\`
+          EOF
+
+          if gh release view "${{ steps.metadata.outputs.tag_name }}" >/dev/null 2>&1; then
+            gh release upload "${{ steps.metadata.outputs.tag_name }}" \
+              "${{ steps.metadata.outputs.zip_path }}" \
+              "${{ steps.metadata.outputs.dmg_path }}" \
+              "${{ steps.metadata.outputs.zip_path }}.sha256" \
+              "${{ steps.metadata.outputs.dmg_path }}.sha256" \
+              --clobber
+          else
+            gh release create "${{ steps.metadata.outputs.tag_name }}" \
+              "${{ steps.metadata.outputs.zip_path }}" \
+              "${{ steps.metadata.outputs.dmg_path }}" \
+              "${{ steps.metadata.outputs.zip_path }}.sha256" \
+              "${{ steps.metadata.outputs.dmg_path }}.sha256" \
+              --title "Muesli ${{ steps.metadata.outputs.tag_name }}" \
+              --target "${GITHUB_SHA}" \
+              --notes-file "${notes_file}"
+          fi
+
+      - name: Clean up CI signing assets
+        if: always()
+        shell: bash
+        run: |
+          rm -f "${APP_STORE_CONNECT_API_KEY_PATH}"
+          security delete-keychain "${CI_KEYCHAIN_PATH}" || true
