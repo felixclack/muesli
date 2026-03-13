@@ -42,6 +42,24 @@ final class PermissionsServiceTests: XCTestCase {
         let microphoneRequested = await recorder.microphoneRequested
         XCTAssertTrue(microphoneRequested)
     }
+
+    func testCurrentRequirementsTreatGrantedPromptAsSatisfiedUntilSystemStateCatchesUp() async {
+        let service = PermissionsService(
+            calendarAuthorizationStatus: { .fullAccess },
+            requestCalendarAccess: { true },
+            screenRecordingAuthorized: { true },
+            requestScreenRecordingAccess: { true },
+            microphonePermission: { .undetermined },
+            requestMicrophonePermission: { true },
+            diaProbe: { true },
+            modelProbe: { true }
+        )
+
+        await service.requestMissingPermissions()
+        let requirements = await service.currentRequirements()
+
+        XCTAssertEqual(requirements.first(where: { $0.kind == .microphone })?.satisfied, true)
+    }
 }
 
 private actor PermissionRequestRecorder {

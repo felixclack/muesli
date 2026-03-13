@@ -38,6 +38,7 @@ actor PermissionsService {
     private let requestMicrophonePermission: @Sendable () async -> Bool
     private let diaProbe: @Sendable () async -> Bool
     private let modelProbe: @Sendable () async -> Bool
+    private var grantedMicrophonePermissionInProcess = false
 
     init(
         calendarSource: CalendarMeetingSource,
@@ -89,8 +90,8 @@ actor PermissionsService {
             _ = requestScreenRecordingAccess()
         }
 
-        if microphonePermission() == .undetermined {
-            _ = await requestMicrophonePermission()
+        if resolvedMicrophonePermission() == .undetermined {
+            grantedMicrophonePermissionInProcess = await requestMicrophonePermission()
         }
 
         if await calendarAuthorizationStatus() == .notDetermined {
@@ -102,7 +103,7 @@ actor PermissionsService {
 
     func currentRequirements() async -> [SetupRequirement] {
         let calendarStatus = await calendarAuthorizationStatus()
-        let micStatus = microphonePermission()
+        let micStatus = resolvedMicrophonePermission()
         let diaAuthorized = await diaProbe()
 
         return [
@@ -137,5 +138,22 @@ actor PermissionsService {
                 instructions: "Download the English Whisper model so local transcription can run."
             )
         ]
+    }
+
+    private func resolvedMicrophonePermission() -> AVAudioApplication.recordPermission {
+        let livePermission = microphonePermission()
+
+        switch livePermission {
+        case .granted:
+            grantedMicrophonePermissionInProcess = true
+            return .granted
+        case .denied:
+            grantedMicrophonePermissionInProcess = false
+            return .denied
+        case .undetermined:
+            return grantedMicrophonePermissionInProcess ? .granted : .undetermined
+        @unknown default:
+            return livePermission
+        }
     }
 }
