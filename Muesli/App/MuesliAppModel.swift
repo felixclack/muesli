@@ -28,6 +28,7 @@ final class MuesliAppModel: ObservableObject {
 
     private var automationTask: Task<Void, Never>?
     private var activationTask: Task<Void, Never>?
+    private var permissionRefreshTask: Task<Void, Never>?
     private var negativePollDuration: TimeInterval = 0
     private var lastMissingRequirementSignature = ""
     private var lastArmedMeetingSignature = ""
@@ -83,6 +84,7 @@ final class MuesliAppModel: ObservableObject {
     deinit {
         automationTask?.cancel()
         activationTask?.cancel()
+        permissionRefreshTask?.cancel()
     }
 
     func start() {
@@ -133,6 +135,7 @@ final class MuesliAppModel: ObservableObject {
 
             if let requirementNeedingSettings {
                 openSystemSettings(for: requirementNeedingSettings.kind)
+                beginPermissionRefreshWindow()
             }
 
             await tick()
@@ -153,6 +156,7 @@ final class MuesliAppModel: ObservableObject {
                 let resolved = await permissionsService.resolve(requirement.kind)
                 if !resolved {
                     openSystemSettings(for: requirement.kind)
+                    beginPermissionRefreshWindow()
                 }
             }
 
@@ -526,6 +530,25 @@ final class MuesliAppModel: ObservableObject {
 
     private func activateForPermissionPrompt() {
         NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
+    private func beginPermissionRefreshWindow() {
+        permissionRefreshTask?.cancel()
+        permissionRefreshTask = Task { [weak self] in
+            guard let self else { return }
+
+            for attempt in 0..<15 {
+                if Task.isCancelled {
+                    return
+                }
+
+                await self.tick()
+
+                if attempt < 14 {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+            }
+        }
     }
 
     private func logRequirementsIfNeeded() {

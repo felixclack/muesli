@@ -71,6 +71,7 @@ struct SettingsView: View {
         .padding()
         .frame(width: 560)
         .onAppear {
+            model.refreshNow()
             model.requestPromptablePermissionsIfNeeded()
         }
     }

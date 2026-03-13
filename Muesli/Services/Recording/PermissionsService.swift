@@ -126,14 +126,15 @@ actor PermissionsService {
         let micStatus = await resolvedMicrophonePermission()
         let diaAuthorized = await diaProbe()
         let modelReady = await modelProbe()
+        let calendarAccessGranted = hasCalendarAccess(for: calendarStatus)
 
         return [
             SetupRequirement(
                 kind: .calendar,
                 title: "Calendar",
-                satisfied: calendarStatus == .fullAccess,
+                satisfied: calendarAccessGranted,
                 instructions: "Grant Calendar Full Access so Muesli can arm upcoming meetings.",
-                resolution: calendarStatus == .fullAccess ? nil : calendarResolution(for: calendarStatus)
+                resolution: calendarAccessGranted ? nil : calendarResolution(for: calendarStatus)
             ),
             SetupRequirement(
                 kind: .screenRecording,
@@ -170,7 +171,7 @@ actor PermissionsService {
         switch kind {
         case .calendar:
             let status = await calendarAuthorizationStatus()
-            guard status != .fullAccess else { return true }
+            guard !hasCalendarAccess(for: status) else { return true }
             guard status == .notDetermined else { return false }
             return await requestCalendarAccess()
         case .screenRecording:
@@ -217,8 +218,19 @@ actor PermissionsService {
             .requestAccess
         case .fullAccess:
             .requestAccess
+        case .authorized:
+            .requestAccess
         default:
             .openSystemSettings
+        }
+    }
+
+    private func hasCalendarAccess(for status: EKAuthorizationStatus) -> Bool {
+        switch status {
+        case .fullAccess, .authorized:
+            true
+        default:
+            false
         }
     }
 

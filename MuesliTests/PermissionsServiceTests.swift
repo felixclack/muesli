@@ -95,6 +95,41 @@ final class PermissionsServiceTests: XCTestCase {
         XCTAssertEqual(requirements.first(where: { $0.kind == .calendar })?.resolution, .requestAccess)
     }
 
+    func testCurrentRequirementsTreatsAuthorizedCalendarPermissionAsSatisfied() async {
+        let service = PermissionsService(
+            calendarAuthorizationStatus: { .authorized },
+            requestCalendarAccess: { true },
+            screenRecordingAuthorized: { true },
+            requestScreenRecordingAccess: { true },
+            microphonePermission: { .granted },
+            requestMicrophonePermission: { true },
+            diaProbe: { true },
+            modelProbe: { true }
+        )
+
+        let requirements = await service.currentRequirements()
+
+        XCTAssertEqual(requirements.first(where: { $0.kind == .calendar })?.satisfied, true)
+        XCTAssertNil(requirements.first(where: { $0.kind == .calendar })?.resolution)
+    }
+
+    func testResolveCalendarReturnsTrueForAuthorizedAccess() async {
+        let service = PermissionsService(
+            calendarAuthorizationStatus: { .authorized },
+            requestCalendarAccess: { true },
+            screenRecordingAuthorized: { true },
+            requestScreenRecordingAccess: { true },
+            microphonePermission: { .granted },
+            requestMicrophonePermission: { true },
+            diaProbe: { true },
+            modelProbe: { true }
+        )
+
+        let resolved = await service.resolve(.calendar)
+
+        XCTAssertTrue(resolved)
+    }
+
     func testInitialPermissionPromptGatePromptsForRequestAccessRequirementsOnce() {
         let (gate, defaults, suiteName) = makeInitialPermissionPromptGate()
         defer { defaults.removePersistentDomain(forName: suiteName) }
