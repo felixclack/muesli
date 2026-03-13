@@ -144,6 +144,8 @@ xcodegen generate
 
 This repo now uses Fastlane for local reinstalls, Developer ID certificate setup, and signed/notarized releases.
 
+The wrapper scripts prefer a globally installed `fastlane`, but they now fall back to `bundle exec fastlane` automatically when only the Bundler-managed gem is available.
+
 Check the current machine state first:
 
 ```bash
@@ -202,6 +204,15 @@ scripts/reinstall_local_app.sh
 ```
 
 `Apple Distribution` and `Apple Development` still work as fallbacks if you need them, but they are less ideal for matching the shipped direct-download build.
+
+If this Mac does not have any Apple-issued signing identities, you can create a stable self-signed identity once and then reuse it for local permission testing:
+
+```bash
+scripts/setup_local_signing.sh
+scripts/reinstall_local_app.sh
+```
+
+That local identity defaults to `Muesli Local Development` and is stored in `~/Library/Keychains/muesli-local-signing.keychain-db`. It is only for repeatable local installs; notarized releases should still use `Developer ID Application`.
 
 ### Signed And Notarized Releases
 

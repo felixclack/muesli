@@ -6,7 +6,9 @@ require "base64"
 require "fileutils"
 require "openssl"
 require "pathname"
+require "securerandom"
 require "shellwords"
+require "tmpdir"
 
 def repo_root
   File.expand_path("..", __dir__)
@@ -28,6 +30,22 @@ def default_match_git_url
   (ENV["MATCH_GIT_URL"] || "git@github.com:felixclack/muesli-certificates.git").strip
 end
 
+def default_local_signing_identity
+  (ENV["MUESLI_LOCAL_SIGNING_IDENTITY"] || "Muesli Local Development").strip
+end
+
+def default_local_signing_keychain_path
+  (ENV["MUESLI_LOCAL_SIGNING_KEYCHAIN"] || File.expand_path("~/Library/Keychains/muesli-local-signing.keychain-db")).strip
+end
+
+def default_local_signing_keychain_password
+  (ENV["MUESLI_LOCAL_SIGNING_KEYCHAIN_PASSWORD"] || "muesli-local-signing").strip
+end
+
+def login_keychain_path
+  File.expand_path("~/Library/Keychains/login.keychain-db")
+end
+
 def shellescape(value)
   Shellwords.escape(value.to_s)
 end
@@ -45,6 +63,135 @@ def first_identity(output, prefix)
   end.first
 end
 
+def certificate_hashes_for_label(common_name)
+  return [] if common_name.to_s.strip.empty?
+
+  output = `security find-certificate -a -Z #{shellescape(default_local_signing_keychain_path)} 2>/dev/null`
+
+  output.split(/^SHA-256 hash: /).filter_map do |record|
+    next if record.strip.empty?
+
+    sha1 = record[/^SHA-1 hash:\s+([A-F0-9]+)/, 1]
+    label = record[/^\s+"labl"<blob>="([^"]+)"/, 1]
+    next if sha1.to_s.empty? || label != common_name
+
+    sha1
+  end
+end
+
+def ensure_local_keychain_search_list!
+  keychains = Dir.glob(File.expand_path("~/Library/Keychains/*.{keychain,keychain-db}")).select { |path| path != default_local_signing_keychain_path }
+  search_list = ([default_local_signing_keychain_path] + keychains).uniq
+  sh("security list-keychains -d user -s #{search_list.map { |keychain| shellescape(keychain) }.join(' ')}")
+end
+
+def unlock_local_keychain!
+  return unless File.exist?(default_local_signing_keychain_path)
+
+  sh(
+    "security unlock-keychain -p #{shellescape(default_local_signing_keychain_password)} #{shellescape(default_local_signing_keychain_path)}",
+    log: false
+  )
+  ensure_local_keychain_search_list!
+end
+
+def local_identity_hash(common_name)
+  return false if common_name.to_s.strip.empty?
+
+  unlock_local_keychain!
+
+  certificate_hashes_for_label(common_name).find do |hash|
+    Dir.mktmpdir("muesli-local-signing-check") do |dir|
+      probe_path = File.join(dir, "probe")
+      FileUtils.cp("/bin/echo", probe_path)
+
+      system(
+        "codesign",
+        "--force",
+        "--keychain",
+        default_local_signing_keychain_path,
+        "--sign",
+        hash,
+        probe_path,
+        out: File::NULL,
+        err: File::NULL
+      )
+    end
+  end
+end
+
+def local_identity_available?(common_name)
+  !!local_identity_hash(common_name)
+end
+
+def create_local_identity!(common_name)
+  unless File.exist?(default_local_signing_keychain_path)
+    sh("security create-keychain -p #{shellescape(default_local_signing_keychain_password)} #{shellescape(default_local_signing_keychain_path)}")
+  end
+
+  sh("security set-keychain-settings -lut 21600 #{shellescape(default_local_signing_keychain_path)}")
+  unlock_local_keychain!
+
+  key = OpenSSL::PKey::RSA.new(2048)
+  certificate = OpenSSL::X509::Certificate.new
+  certificate.version = 2
+  certificate.serial = SecureRandom.random_number((2**63) - 1) + 1
+
+  subject = OpenSSL::X509::Name.new(
+    [
+      ["CN", common_name],
+      ["O", "Felix Clack Local Development"],
+      ["OU", "Muesli"],
+      ["C", "GB"]
+    ]
+  )
+
+  certificate.subject = subject
+  certificate.issuer = subject
+  certificate.public_key = key.public_key
+  certificate.not_before = Time.now - 60
+  certificate.not_after = certificate.not_before + (60 * 60 * 24 * 365 * 10)
+
+  extensions = OpenSSL::X509::ExtensionFactory.new
+  extensions.subject_certificate = certificate
+  extensions.issuer_certificate = certificate
+  certificate.add_extension(extensions.create_extension("basicConstraints", "critical,CA:TRUE"))
+  certificate.add_extension(extensions.create_extension("keyUsage", "critical,digitalSignature,keyCertSign"))
+  certificate.add_extension(extensions.create_extension("extendedKeyUsage", "critical,codeSigning"))
+  certificate.add_extension(extensions.create_extension("subjectKeyIdentifier", "hash"))
+  certificate.add_extension(extensions.create_extension("authorityKeyIdentifier", "keyid:always,issuer"))
+  certificate.sign(key, OpenSSL::Digest::SHA256.new)
+
+  import_password = SecureRandom.hex(24)
+
+  Dir.mktmpdir("muesli-local-signing") do |dir|
+    pkcs12_path = File.join(dir, "local-signing.p12")
+    pkcs12 = OpenSSL::PKCS12.create(import_password, common_name, key, certificate)
+    File.binwrite(pkcs12_path, pkcs12.to_der)
+
+    sh(
+      [
+        "security", "import", shellescape(pkcs12_path),
+        "-k", shellescape(default_local_signing_keychain_path),
+        "-P", shellescape(import_password),
+        "-A",
+        "-t", "agg",
+        "-f", "pkcs12"
+      ].join(" ")
+    )
+  end
+
+  sh(
+    [
+      "security", "set-key-partition-list",
+      "-S", "apple-tool:,apple:",
+      "-s",
+      "-k", shellescape(default_local_signing_keychain_password),
+      shellescape(default_local_signing_keychain_path)
+    ].join(" ")
+  )
+end
+
 platform :mac do
   desc "Show current signing and notarization readiness"
   lane :doctor do
@@ -59,10 +206,12 @@ platform :mac do
     developer_id = first_identity(identities_output, "Developer ID Application")
     apple_distribution = first_identity(identities_output, "Apple Distribution")
     apple_development = first_identity(identities_output, "Apple Development")
+    local_identity = default_local_signing_identity
 
     developer_id ? UI.success("Developer ID identity detected: #{developer_id}") : UI.important("No Developer ID Application identity detected.")
     apple_distribution ? UI.success("Apple Distribution identity detected: #{apple_distribution}") : UI.important("No Apple Distribution identity detected.")
     apple_development ? UI.success("Apple Development identity detected: #{apple_development}") : UI.important("No Apple Development identity detected.")
+    local_identity_available?(local_identity) ? UI.success("Local signing identity detected: #{local_identity}") : UI.important("No local self-signed identity detected. Run `scripts/setup_local_signing.sh` for stable local permission testing.")
 
     api_key_path = repo_relative_path(ENV["APP_STORE_CONNECT_API_KEY_PATH"])
     fastlane_user = ENV["FASTLANE_USER"].to_s.strip
@@ -82,6 +231,23 @@ platform :mac do
     end
 
     UI.success("match repository configured: #{match_git_url}")
+  end
+
+  desc "Create a stable local self-signed signing identity for reinstall testing"
+  lane :setup_local_signing do
+    local_identity = default_local_signing_identity
+
+    if local_identity_available?(local_identity)
+      UI.success("Local signing identity is ready: #{local_identity}")
+      next
+    end
+
+    UI.message("Creating local self-signed identity #{local_identity} in #{default_local_signing_keychain_path}...")
+    create_local_identity!(local_identity)
+
+    UI.user_error!("Created #{local_identity}, but codesign still cannot use it.") unless local_identity_available?(local_identity)
+
+    UI.success("Local signing identity is ready: #{local_identity}")
   end
 
   desc "Create or sync a Developer ID Application certificate with match"
@@ -184,9 +350,11 @@ platform :mac do
 
     identities_output = sh("security find-identity -v -p codesigning", log: false)
     signing_identity = ENV["MUESLI_INSTALL_SIGNING_IDENTITY"].to_s.strip
+    local_signing_hash = local_identity_hash(default_local_signing_identity)
     signing_identity = first_identity(identities_output, "Developer ID Application") if signing_identity.empty?
     signing_identity = first_identity(identities_output, "Apple Distribution") if signing_identity.empty?
     signing_identity = first_identity(identities_output, "Apple Development") if signing_identity.empty?
+    signing_identity = local_signing_hash if signing_identity.empty?
 
     UI.message("Building a clean local app bundle...")
     sh(
@@ -204,16 +372,24 @@ platform :mac do
 
     if signing_identity.empty?
       UI.important("No stable signing identity detected; installing the ad hoc-signed build.")
+      UI.important("Run `scripts/setup_local_signing.sh` to create a repeatable local identity for permission testing.")
       UI.important("macOS permissions are less likely to persist across reinstalls with ad hoc signatures.")
     else
       UI.message("Re-signing app with #{signing_identity}...")
-      sh("codesign --force --deep --sign #{shellescape(signing_identity)} #{shellescape(app_path)}")
+      if !local_signing_hash.to_s.empty? && signing_identity == local_signing_hash
+        unlock_local_keychain!
+        sh(
+          "codesign --force --deep --keychain #{shellescape(default_local_signing_keychain_path)} --sign #{shellescape(signing_identity)} #{shellescape(app_path)}"
+        )
+      else
+        sh("codesign --force --deep --sign #{shellescape(signing_identity)} #{shellescape(app_path)}")
+      end
     end
 
     UI.message("Installing to #{install_path}...")
     sh("pkill -x Muesli >/dev/null 2>&1 || true")
-    sh("mkdir -p #{shellescape(install_path)}")
-    sh("rsync -a --delete #{shellescape("#{app_path}/")} #{shellescape("#{install_path}/")}")
+    sh("rm -rf #{shellescape(install_path)}")
+    sh("ditto #{shellescape(app_path)} #{shellescape(install_path)}")
 
     UI.message("Launching #{install_path}...")
     sh("open -a #{shellescape(install_path)}")

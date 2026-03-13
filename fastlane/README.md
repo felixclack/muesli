@@ -23,6 +23,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Show current signing and notarization readiness
 
+### mac setup_local_signing
+
+```sh
+[bundle exec] fastlane mac setup_local_signing
+```
+
+Create a stable local self-signed signing identity for reinstall testing
+
 ### mac setup_signing
 
 ```sh
