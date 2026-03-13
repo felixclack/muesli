@@ -25,14 +25,19 @@ concurrency:
 jobs:
   release:
     runs-on: macos-latest
-    env:
-      APP_STORE_CONNECT_API_KEY_PATH: ${{ runner.temp }}/app_store_connect_api_key.json
-      CI_KEYCHAIN_PATH: ${{ runner.temp }}/muesli-signing.keychain-db
     steps:
       - name: Check out source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Define temporary CI paths
+        shell: bash
+        run: |
+          {
+            echo "APP_STORE_CONNECT_API_KEY_PATH=${RUNNER_TEMP}/app_store_connect_api_key.json"
+            echo "CI_KEYCHAIN_PATH=${RUNNER_TEMP}/muesli-signing.keychain-db"
+          } >> "$GITHUB_ENV"
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
