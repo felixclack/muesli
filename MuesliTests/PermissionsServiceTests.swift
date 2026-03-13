@@ -94,6 +94,62 @@ final class PermissionsServiceTests: XCTestCase {
 
         XCTAssertEqual(requirements.first(where: { $0.kind == .calendar })?.resolution, .requestAccess)
     }
+
+    func testInitialPermissionPromptGatePromptsForRequestAccessRequirementsOnce() {
+        let (gate, defaults, suiteName) = makeInitialPermissionPromptGate()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let requirements = [
+            SetupRequirement(
+                kind: .microphone,
+                title: "Microphone",
+                satisfied: false,
+                instructions: "Grant Microphone access so Muesli can capture your voice.",
+                resolution: .requestAccess
+            )
+        ]
+
+        XCTAssertTrue(gate.shouldPrompt(for: requirements, launchAtLoginEnabled: false))
+
+        gate.markPrompted()
+
+        XCTAssertFalse(gate.shouldPrompt(for: requirements, launchAtLoginEnabled: false))
+    }
+
+    func testInitialPermissionPromptGateSkipsDeniedAndLaunchAtLoginStates() {
+        let (gate, defaults, suiteName) = makeInitialPermissionPromptGate()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let deniedRequirements = [
+            SetupRequirement(
+                kind: .calendar,
+                title: "Calendar",
+                satisfied: false,
+                instructions: "Grant Calendar Full Access so Muesli can arm upcoming meetings.",
+                resolution: .openSystemSettings
+            )
+        ]
+
+        XCTAssertFalse(gate.shouldPrompt(for: deniedRequirements, launchAtLoginEnabled: false))
+
+        let requestableRequirements = [
+            SetupRequirement(
+                kind: .calendar,
+                title: "Calendar",
+                satisfied: false,
+                instructions: "Grant Calendar Full Access so Muesli can arm upcoming meetings.",
+                resolution: .requestAccess
+            )
+        ]
+
+        XCTAssertFalse(gate.shouldPrompt(for: requestableRequirements, launchAtLoginEnabled: true))
+    }
+
+    private func makeInitialPermissionPromptGate() -> (InitialPermissionPromptGate, UserDefaults, String) {
+        let suiteName = "PermissionsServiceTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        return (InitialPermissionPromptGate(defaults: defaults), defaults, suiteName)
+    }
 }
 
 private actor PermissionRequestRecorder {

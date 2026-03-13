@@ -15,6 +15,16 @@ struct MenuBarView: View {
             Divider()
 
             VStack(spacing: 6) {
+                if !model.requirements.isEmpty && !model.requirements.allSatisfy(\.satisfied) {
+                    MenuActionButton(
+                        title: "Complete Setup",
+                        systemImage: "checkmark.shield",
+                        enabled: true
+                    ) {
+                        model.requestPermissionsAndModel()
+                    }
+                }
+
                 MenuActionButton(
                     title: model.activeSession == nil ? "Start Now" : "Stop Recording",
                     systemImage: model.activeSession == nil ? "record.circle" : "stop.circle",

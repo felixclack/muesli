@@ -23,6 +23,7 @@ final class MuesliAppModel: ObservableObject {
     private let recorder: MeetingRecorder
     private let transcriber: WhisperTranscriber
     private let permissionsService: PermissionsService
+    private let initialPermissionPromptGate: InitialPermissionPromptGate
     private let notifications = NotificationService()
 
     private var automationTask: Task<Void, Never>?
@@ -62,16 +63,20 @@ final class MuesliAppModel: ObservableObject {
             diaProbe: { await diaController.automationPermissionGranted() },
             modelProbe: { await transcriber.modelExists() }
         )
+        self.initialPermissionPromptGate = InitialPermissionPromptGate()
         self.activationTask = Task { [weak self] in
             for await _ in NotificationCenter.default.notifications(named: NSApplication.didBecomeActiveNotification) {
                 guard let self else { return }
                 await self.tick()
+                await self.maybePromptForInitialPermissions()
             }
         }
 
         Task {
             await loadSessions()
             await refreshRequirements()
+            await Task.yield()
+            await maybePromptForInitialPermissions()
         }
     }
 
@@ -310,6 +315,24 @@ final class MuesliAppModel: ObservableObject {
         logRequirementsIfNeeded()
     }
 
+    private func maybePromptForInitialPermissions() async {
+        guard initialPermissionPromptGate.shouldPrompt(
+            for: requirements,
+            launchAtLoginEnabled: settingsStore.settings.launchAtLoginEnabled
+        ) else {
+            return
+        }
+
+        initialPermissionPromptGate.markPrompted()
+        activateForPermissionPrompt()
+
+        for requirement in requirements where !requirement.satisfied && requirement.resolution == .requestAccess {
+            _ = await permissionsService.resolve(requirement.kind)
+        }
+
+        await refreshRequirements()
+    }
+
     private func loadSessions() async {
         do {
             sessions = try await repository.loadSessions()
@@ -535,5 +558,28 @@ final class MuesliAppModel: ObservableObject {
             let titles = armedMeetings.map(\.candidate.title).joined(separator: ", ")
             Logger.calendar.info("Armed meetings: \(titles, privacy: .public)")
         }
+    }
+}
+
+struct InitialPermissionPromptGate {
+    private static let key = "Muesli.HasAttemptedInitialPermissionPrompt"
+
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func shouldPrompt(for requirements: [SetupRequirement], launchAtLoginEnabled: Bool) -> Bool {
+        guard !launchAtLoginEnabled else { return false }
+        guard defaults.bool(forKey: Self.key) == false else { return false }
+
+        return requirements.contains { requirement in
+            !requirement.satisfied && requirement.resolution == .requestAccess
+        }
+    }
+
+    func markPrompted() {
+        defaults.set(true, forKey: Self.key)
     }
 }
